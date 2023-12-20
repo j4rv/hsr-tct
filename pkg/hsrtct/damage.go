@@ -81,6 +81,9 @@ func CalcBaseDamage(c Character, e Enemy, a Attack) (float64, error) {
 }
 
 func CalcAvgCritMultiplier(c Character, e Enemy, a Attack) float64 {
+	if a.AttackTag == Dot {
+		return 1
+	}
 	critRate := c.FinalStatValue(CritRate, a.AttackTag, a.Element)
 	critDamage := c.FinalStatValue(CritDmg, a.AttackTag, a.Element)
 	critRate = math.Min(critRate, 100)
