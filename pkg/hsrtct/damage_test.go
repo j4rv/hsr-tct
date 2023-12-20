@@ -90,7 +90,7 @@ func TestCalcAvgDamageUltimate(t *testing.T) {
 		Element:     hsrtct.Fire,
 		AttackTag:   hsrtct.Ultimate,
 	}
-	damage, err := hsrtct.CalcAvgDamage(hook, enemy, attack)
+	damage, err := hsrtct.CalcAvgDamageST(hook, enemy, attack)
 	assertNotNil(t, err)
 	if int(damage) != 41425 {
 		t.Fatalf("Expected damage to be 41425, got %v", damage)
@@ -119,16 +119,16 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 		AttackTag:   hsrtct.Skill,
 	}
 
-	leftDmg, err := hsrtct.CalcAvgDamage(hook, leftEnemy, skillSplash)
+	leftDmg, err := hsrtct.CalcAvgDamageST(hook, leftEnemy, skillSplash)
 	assertNotNil(t, err)
-	rightDmg, err := hsrtct.CalcAvgDamage(hook, rightEnemy, skillSplash)
+	rightDmg, err := hsrtct.CalcAvgDamageST(hook, rightEnemy, skillSplash)
 	assertNotNil(t, err)
-	centerDmg, err := hsrtct.CalcAvgDamage(hook, centerEnemy, skillCenter)
+	centerDmg, err := hsrtct.CalcAvgDamageST(hook, centerEnemy, skillCenter)
 	assertNotNil(t, err)
 
 	damage := leftDmg + centerDmg + rightDmg
 	if int(damage) != 91656 {
-		t.Fatalf("Expected damage to be 75813, got %v", damage)
+		t.Fatalf("Expected damage to be 91656, got %v", damage)
 	}
 }
 

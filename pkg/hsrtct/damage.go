@@ -23,16 +23,43 @@ func (d AttackTag) Is(tag AttackTag) bool {
 	return d == tag || d == AnyAttack || tag == AnyAttack
 }
 
+type AttackAOE string
+
+const (
+	Single AttackAOE = ""
+	Blast  AttackAOE = "Blast"
+	All    AttackAOE = "All"
+)
+
+// Attack is an attack that can be used by a character.
+// If AOE is Single: will use Multiplier and MultiplierSplash will be ignored.
+// If AOE is Blast, will use Multiplier for the focused enemy and MultiplierSplash for its neighbors.
+// If AOE is All, will use Multiplier for all enemies.
 type Attack struct {
-	ID          uint
-	ScalingStat Stat
-	Multiplier  float64
-	Element     Element
-	AttackTag   AttackTag
-	Buffs       []Buff
+	ID               string
+	Name             string
+	ScalingStat      Stat
+	Multiplier       float64
+	MultiplierSplash float64
+	Element          Element
+	AttackTag        AttackTag
+	AttackAOE        AttackAOE
+	Buffs            []Buff
 }
 
-func CalcAvgDamage(c Character, e Enemy, a Attack) (float64, error) {
+type Scenario struct {
+	ID           string
+	Name         string
+	Character    string
+	Enemies      []string
+	FocusedEnemy string
+	Attacks      map[string]float64
+}
+
+func CalcAvgDamageST(c Character, e Enemy, a Attack) (float64, error) {
+	if a.AttackAOE != Single {
+		return 0, errors.New("expected aoe: single")
+	}
 	baseDamage, err := CalcBaseDamage(c, e, a)
 	if err != nil {
 		return 0, err
@@ -45,7 +72,7 @@ func CalcAvgDamage(c Character, e Enemy, a Attack) (float64, error) {
 	return baseDamage * critMult * dmgBonusMult * resMult * defMult * vulnMult, nil
 }
 
-func ExplainDamage(c Character, e Enemy, a Attack) (string, error) {
+func ExplainDamageST(c Character, e Enemy, a Attack) (string, error) {
 	baseDamage, err := CalcBaseDamage(c, e, a)
 	if err != nil {
 		return "", err
@@ -56,12 +83,12 @@ func ExplainDamage(c Character, e Enemy, a Attack) (string, error) {
 	defMult := CalcDefenseMultiplier(c, e, a)
 	vulnMult := CalcVulnerabilityMultiplier(c, e, a)
 	return fmt.Sprintf(
-		"Base Damage: %v\n"+
-			"Crit Multiplier: %v\n"+
-			"Damage Bonus Multiplier: %v\n"+
-			"Resistance Multiplier: %v\n"+
-			"Defense Multiplier: %v\n"+
-			"Vulnerability Multiplier: %v",
+		"Base Damage: %.2f\n"+
+			"Crit Multiplier: %.2f\n"+
+			"Damage Bonus Multiplier: %.2f\n"+
+			"Resistance Multiplier: %.2f\n"+
+			"Defense Multiplier: %.2f\n"+
+			"Vulnerability Multiplier: %.2f",
 		baseDamage, critMult, dmgBonusMult, resMult, defMult, vulnMult), nil
 }
 
