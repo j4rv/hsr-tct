@@ -11,7 +11,7 @@ var db database
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
 	var tmpl = template.New("index.html")
-	tmpl, _ = tmpl.ParseFiles("web/templates/index.html")
+	tmpl, _ = tmpl.ParseFiles("web/template/index.html")
 	err := tmpl.Execute(w, "Hello World!")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
