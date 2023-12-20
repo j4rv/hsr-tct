@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/boltdb/bolt"
-	"github.com/j4rv/hsr-tct/pkg/hsrtct"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -17,8 +16,6 @@ func New() *database {
 	return &database{}
 }
 
-var charactersBucket = []byte("Characters")
-var lightconesBucket = []byte("Lightcones")
 var enemiesBucket = []byte("Enemies")
 
 func (database *database) Init(databasePath string) (func() error, error) {
@@ -62,20 +59,8 @@ func (database *database) CreateBuckets() error {
 	return nil
 }
 
-func (database *database) AddLightCone(c hsrtct.LightCone) (string, error) {
-	c.ID = uuid.NewV4().String()
-	return c.ID, addEntity(database.db, lightconesBucket, c.ID, c)
-}
-
-func (database *database) AddCharacter(c hsrtct.Character) (string, error) {
-	c.ID = uuid.NewV4().String()
-	return c.ID, addEntity(database.db, charactersBucket, c.ID, c)
-}
-
-func (database *database) GetCharacter(id string) (hsrtct.Character, error) {
-	return getEntity[hsrtct.Character](database.db, charactersBucket, id)
-}
-
+// getEntity retrieves the JSON-encoded data of an entity from the specified BoltDB bucket based on the provided key.
+// The data is unmarshaled into the provided type T. If the entity is not found, an error is returned.
 func getEntity[T any](db *bolt.DB, bucketName []byte, key string) (T, error) {
 	var result T
 
@@ -100,6 +85,9 @@ func getEntity[T any](db *bolt.DB, bucketName []byte, key string) (T, error) {
 	return result, err
 }
 
+// addEntity adds an entity to the specified BoltDB bucket with the provided key.
+// The entity is first serialized to JSON, and the JSON data is stored in the database.
+// If the key already exists, the existing value will be replaced with the new value.
 func addEntity[T any](db *bolt.DB, bucket []byte, key string, entity T) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucket)
@@ -109,6 +97,25 @@ func addEntity[T any](db *bolt.DB, bucket []byte, key string, entity T) error {
 		}
 		err = b.Put([]byte(key), jsonData)
 		return err
+	})
+}
+
+// deleteEntity deletes an entity from the specified BoltDB bucket based on the provided key.
+// If the entity is not found, an error is returned. The function opens an update transaction
+// to delete the key-value pair associated with the provided key.
+func deleteEntity(db *bolt.DB, bucketName []byte, key string) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(bucketName)
+		if bucket == nil {
+			return fmt.Errorf("bucket not found: %s", string(bucketName))
+		}
+
+		// Check if the entity exists before attempting to delete
+		if existingData := bucket.Get([]byte(key)); existingData == nil {
+			return fmt.Errorf("entity with key '%s' not found", key)
+		}
+
+		return bucket.Delete([]byte(key))
 	})
 }
 

@@ -1,7 +1,7 @@
 package hsrtct
 
 type Enemy struct {
-	ID      uint
+	ID      string
 	Name    string
 	Level   int
 	Buffs   []Buff
