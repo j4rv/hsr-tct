@@ -5,7 +5,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var lightconesBucket = []byte("Lightcones")
+var lightconesBucket = []byte("lightcones")
 
 func (database *database) AddLightCone(lc hsrtct.LightCone) (string, error) {
 	lc.ID = uuid.NewV4().String()

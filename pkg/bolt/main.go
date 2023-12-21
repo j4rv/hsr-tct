@@ -16,8 +16,6 @@ func New() *database {
 	return &database{}
 }
 
-var enemiesBucket = []byte("Enemies")
-
 func (database *database) Init(databasePath string) (func() error, error) {
 	db, err := bolt.Open(databasePath, 0600, nil)
 	if err != nil {

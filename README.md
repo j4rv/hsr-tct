@@ -3,8 +3,8 @@
  - [x] Create the calculator package hsrtct
  - [x] Decide the database to use
     - [x] Bolt DB
- - [ ] Make a **Lightcone CRUD (DB)**
- - [ ] Make a **Lightcone CRUD (UI)**
+ - [ ] Make a **LightCone CRUD (DB)**
+ - [ ] Make a **LightCone CRUD (UI)**
  - [ ] Make a **CRUD for Characters (DB and UI)**
  - [ ] Make a **CRUD for Enemies (DB and UI)**
  - [ ] Make a **CRUD for Attacks (DB and UI)** (Maybe include Attacks as part of a Character?)

@@ -5,6 +5,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+var enemiesBucket = []byte("enemies")
+
 func (database *database) GetEnemy(id string) (hsrtct.Enemy, error) {
 	return getEntity[hsrtct.Enemy](database.db, enemiesBucket, id)
 }

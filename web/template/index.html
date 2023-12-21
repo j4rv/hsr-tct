@@ -3,10 +3,118 @@
 
 <head>
     <title>Hello World</title>
+    {{template "head" .}}
 </head>
 
 <body>
-    <h1>{{.}}</h1>
+
+    <div class="modal is-active" id="lightConeModal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">LightCone Form</p>
+                    <button class="delete" aria-label="close" onclick="closeModal()"></button>
+                </header>
+                <form hx-put="/lightcone/{{ .ID }}" hx-target="this" hx-swap="outerHTML" class="modal-card-body">
+
+                    <div class="field">
+                        <label for="name" class="label">Name:</label>
+                        <div class="control">
+                            <input type="text" id="name" name="name" class="input" value="{{ .Name }}" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="level" class="label">Level:</label>
+                        <div class="control">
+                            <input type="number" id="level" name="level" class="input" value="{{ .Level }}" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="baseHp" class="label">Base HP:</label>
+                        <div class="control">
+                            <input type="number" id="baseHp" name="baseHp" step="any" class="input"
+                                value="{{ .BaseHp }}" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Buffs:</label>
+                        {{ range $index, $buff := .Buffs }}
+                        <div class="field is-grouped">
+                            <input type="hidden" name="buffs[{{ $index }}][id]" value="{{ $buff.ID }}">
+                            <div class="field">
+                                <label for="buffs[{{ $index }}][stat]" class="label">Stat:</label>
+                                <div class="control">
+                                    <input type="text" id="buffs[{{ $index }}][stat]" name="buffs[{{ $index }}][stat]"
+                                        class="input" value="{{ $buff.Stat }}" required>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="buffs[{{ $index }}][value]" class="label">Value:</label>
+                                <div class="control">
+                                    <input type="number" id="buffs[{{ $index }}][value]"
+                                        name="buffs[{{ $index }}][value]" class="input" value="{{ $buff.Value }}"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="damageTag" class="label">Damage Tag:</label>
+                                <div class="control">
+                                    <div class="select">
+                                        <select id="damageTag" name="damageTag" class="select">
+                                            <option value=""></option>
+                                            <option value="Basic">Basic</option>
+                                            <option value="Skill">Skill</option>
+                                            <option value="Ultimate">Ultimate</option>
+                                            <option value="FollowUp">FollowUp</option>
+                                            <option value="Dot">Dot</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="element" class="label">Element:</label>
+                                <div class="control">
+                                    <div class="select">
+                                        <select id="element" name="element" class="select">
+                                            <option value=""></option>
+                                            <option value="Ice">Ice</option>
+                                            <option value="Wind">Wind</option>
+                                            <option value="Fire">Fire</option>
+                                            <option value="Imaginary">Imaginary</option>
+                                            <option value="Lightning">Lightning</option>
+                                            <option value="Quantum">Quantum</option>
+                                            <option value="Physical">Physical</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                                <div class="control">
+                                    <label class="label"> </label>
+                                    <button type="danger" class="button is-secondary">X</button>
+                                </div>
+                        </div>
+                        {{ end }}
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button type="submit" class="button is-primary">Submit</button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

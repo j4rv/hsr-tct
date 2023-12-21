@@ -34,6 +34,4 @@ type Buff struct {
 	Value     float64
 	DamageTag AttackTag
 	Element   Element
-	OwnerID   uint
-	OwnerType string
 }

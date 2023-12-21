@@ -5,7 +5,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var charactersBucket = []byte("Characters")
+var charactersBucket = []byte("characters")
 
 func (database *database) AddCharacter(c hsrtct.Character) (string, error) {
 	c.ID = uuid.NewV4().String()

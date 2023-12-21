@@ -7,48 +7,29 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/j4rv/hsr-tct/pkg/hsrtct"
-	"github.com/j4rv/hsr-tct/pkg/mongodb"
+	"github.com/j4rv/hsr-tct/pkg/bolt"
 	"github.com/j4rv/hsr-tct/pkg/webserver"
 )
 
 func main() {
-	db := mongodb.New()
-	disconnectDb, err := db.Connect()
-	if err != nil {
-		log.Fatal("DB Connect: ", err)
-	}
-	defer disconnectDb()
-	err = db.AddCharacter(hsrtct.Character{
-		Name:    "test",
-		Level:   1,
-		Element: hsrtct.Fire,
-	})
-	if err != nil {
-		log.Fatal("AddLightcone: ", err)
-	}
-}
-
-func main2() {
 	var port int
 	var open bool
 	flag.IntVar(&port, "port", 8080, "Server's port")
 	flag.BoolVar(&open, "open", false, "Open in browser")
 	flag.Parse()
 
-	db := mongodb.New()
-	disconnectDb, err := db.Connect()
+	db := bolt.New()
+	disconnectDb, err := db.Init("my.db")
 	if err != nil {
 		log.Fatal("DB Connect: ", err)
 	}
 	defer disconnectDb()
-	webserver.Setup(db)
 
 	if open {
 		go openWebpage(fmt.Sprintf("http://localhost:%d", port))
 	}
 
-	err = webserver.Start(port)
+	err = webserver.Start(port, db)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

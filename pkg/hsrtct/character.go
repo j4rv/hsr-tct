@@ -25,8 +25,8 @@ func (c *Character) AllBuffs() []Buff {
 	return allBuffs
 }
 
-// EquipLightcone assigns a LightCone to a Character, updating the LightConeID and the LightCone itself.
-func (c *Character) EquipLightcone(lc LightCone) {
+// EquipLightCone assigns a LightCone to a Character, updating the LightConeID and the LightCone itself.
+func (c *Character) EquipLightCone(lc LightCone) {
 	c.LightConeID = lc.ID
 	c.LightCone = lc
 }
