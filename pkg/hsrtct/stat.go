@@ -1,5 +1,10 @@
 package hsrtct
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Stat string
 
 const (
@@ -29,9 +34,27 @@ const (
 )
 
 type Buff struct {
-	ID        uint
 	Stat      Stat
 	Value     float64
 	DamageTag AttackTag
 	Element   Element
+}
+
+func (b Buff) String() string {
+	prettyStat := strings.Replace(string(b.Stat), "Pct", "%", 1)
+	valueSuffix := ""
+	if !(b.Stat == Hp || b.Stat == Atk || b.Stat == Def || b.Stat == Spd || b.Stat == Aggro) {
+		valueSuffix = "%"
+	}
+	result := fmt.Sprintf("%.1f%s %s", b.Value, valueSuffix, prettyStat)
+
+	if b.DamageTag != "" {
+		result += fmt.Sprintf(", DamageTag: %s", b.DamageTag)
+	}
+
+	if b.Element != "" {
+		result += fmt.Sprintf(", Element: %s", b.Element)
+	}
+
+	return result
 }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello World</title>
+    {{template "head" .}}
+</head>
+
+<body>
+    <section>
+        <div>
+            <h1>Light Cones List</h1>
+
+            {{ range . }}
+            <div>
+                <article>
+                    <div>
+                        <div>
+                            <p>
+                                <strong>{{ .Name }}</strong><br>
+                                Level: {{ .Level }} <br>
+                                Base HP: {{ .BaseHp }} <br>
+                                Base ATK: {{ .BaseAtk }} <br>
+                                Base DEF: {{ .BaseDef }} <br>
+                            <div>
+                                {{ range .Buffs }}
+                                <span>{{ .String }}</span>
+                                {{ end }}
+                            </div>
+                            </p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {{ end }}
+
+        </div>
+    </section>
+
+</body>
+
+</html>
