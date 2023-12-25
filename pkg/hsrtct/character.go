@@ -96,11 +96,11 @@ func (c *Character) FinalStatValue(stat Stat, tag AttackTag, element Element) fl
 }
 
 type LightCone struct {
-	ID      uint64
-	Name    string
-	Level   int
-	BaseHp  float64
-	BaseAtk float64
-	BaseDef float64
-	Buffs   []Buff
+	ID      uint64  `json:"id"`
+	Name    string  `json:"name"`
+	Level   int     `json:"level"`
+	BaseHp  float64 `json:"baseHp"`
+	BaseAtk float64 `json:"baseAtk"`
+	BaseDef float64 `json:"baseDef"`
+	Buffs   []Buff  `json:"buffs"`
 }

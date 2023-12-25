@@ -6,7 +6,11 @@ import (
 	"path/filepath"
 )
 
-var templates = template.Must(template.New("").Parse(""))
+var templates = template.Must(template.New("").Funcs(template.FuncMap{
+	"safeJS": func(s string) template.HTML {
+		return template.HTML(s)
+	},
+}).Parse(""))
 
 func loadTemplates() {
 	templateDir := "web/template"

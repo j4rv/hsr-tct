@@ -33,11 +33,21 @@ const (
 	Vulnerability          Stat = "Vulnerability"
 )
 
+func StatKeys() []Stat {
+	return []Stat{
+		Hp, Atk, Def, Spd,
+		HpPct, AtkPct, DefPct, SpdPct,
+		CritRate, CritDmg, OutgoingHealingBoost, EffectHitRate, EffectRes,
+		EnergyRegenerationRate, BreakEffect, DefIgnore, DefShred, Aggro,
+		DmgBonus, ElementalRes, ResShred, ResPen, Vulnerability,
+	}
+}
+
 type Buff struct {
-	Stat      Stat
-	Value     float64
-	DamageTag AttackTag
-	Element   Element
+	Stat      Stat      `json:"stat"`
+	Value     float64   `json:"value"`
+	DamageTag AttackTag `json:"damageTag"`
+	Element   Element   `json:"element"`
 }
 
 func (b Buff) String() string {
@@ -49,11 +59,11 @@ func (b Buff) String() string {
 	result := fmt.Sprintf("%.1f%s %s", b.Value, valueSuffix, prettyStat)
 
 	if b.DamageTag != "" {
-		result += fmt.Sprintf(", DamageTag: %s", b.DamageTag)
+		result += fmt.Sprintf("(%s)", b.DamageTag)
 	}
 
 	if b.Element != "" {
-		result += fmt.Sprintf(", Element: %s", b.Element)
+		result += fmt.Sprintf("(%s)", b.Element)
 	}
 
 	return result

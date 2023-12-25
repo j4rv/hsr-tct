@@ -1,7 +1,9 @@
 package webserver
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -16,12 +18,28 @@ func setupHandlers() *http.ServeMux {
 
 	mux.HandleFunc("/", helloHandler)
 	mux.HandleFunc("/lightcones", lightConeHandler)
+	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Println("TEST: " + string(body))
+		lightcone := auxLightCone{}
+		if err := json.Unmarshal(body, &lightcone); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		for _, buffData := range lightcone.Buffs {
+			log.Println("Buff: " + fmt.Sprintf("%+v", buffData))
+		}
+		log.Printf("Lightcone received: %+v", lightcone)
+	})
 	return mux
 }
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
-	err := templates.ExecuteTemplate(w, "index.html", hsrtct.LightCone{
-		ID:      0,
+	jsonData, _ := json.Marshal(hsrtct.LightCone{
 		Name:    "On the Fall of an Aeon",
 		Level:   80,
 		BaseHp:  1058,
@@ -32,21 +50,48 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 			{Stat: hsrtct.DmgBonus, Value: 24},
 		},
 	})
+	err := templates.ExecuteTemplate(w, "index.html", map[string]interface{}{
+		"lightcone":  string(jsonData),
+		"attackTags": hsrtct.AttackTagKeys(),
+		"elements":   hsrtct.ElementKeys(),
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 func lightConeHandler(w http.ResponseWriter, r *http.Request) {
-	lcs, err := db.GetLightCones()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	switch r.Method {
+	case http.MethodGet:
+		lcs, err := db.GetLightCones()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = templates.ExecuteTemplate(w, "lightcone_list.html", lcs)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	case http.MethodPost:
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Println("TEST: " + string(body))
+		lightcone := hsrtct.LightCone{}
+		if err := json.Unmarshal(body, &lightcone); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		for _, buffData := range lightcone.Buffs {
+			log.Println("Buff: " + fmt.Sprintf("%+v", buffData))
+		}
+		log.Printf("Lightcone received: %+v", lightcone)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
-	err = templates.ExecuteTemplate(w, "lightcone_list.html", lcs)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+
 }
 
 func Start(port int, injectedDb database) error {

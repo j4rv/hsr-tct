@@ -23,6 +23,10 @@ func (d AttackTag) Is(tag AttackTag) bool {
 	return d == tag || d == AnyAttack || tag == AnyAttack
 }
 
+func AttackTagKeys() []AttackTag {
+	return []AttackTag{Basic, Skill, Ultimate, FollowUp, Dot}
+}
+
 type AttackAOE string
 
 const (
