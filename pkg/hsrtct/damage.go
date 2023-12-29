@@ -52,12 +52,14 @@ type Attack struct {
 }
 
 type Scenario struct {
-	ID           uint64
-	Name         string
-	Character    string
-	Enemies      []string
-	FocusedEnemy string
-	Attacks      map[string]float64
+	ID             uint64
+	Name           string
+	Notes          string
+	Character      string
+	Enemies        []string
+	FocusedEnemy   string
+	Attacks        map[uint64]float64
+	AttacksSummary map[uint64]string
 }
 
 func CalcAvgDamageST(c Character, e Enemy, a Attack) (float64, error) {
