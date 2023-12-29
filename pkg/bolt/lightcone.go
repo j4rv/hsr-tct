@@ -20,6 +20,6 @@ func (database *database) UpdateLightCone(id string, lc hsrtct.LightCone) error 
 	return addEntity(database.db, lightconesBucket, id, lc)
 }
 
-func (database *database) DeleteLightcone(id string) error {
+func (database *database) DeleteLightCone(id string) error {
 	return deleteEntity(database.db, lightconesBucket, id)
 }

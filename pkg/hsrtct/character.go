@@ -32,7 +32,7 @@ func (c *Character) EquipLightCone(lc LightCone) {
 }
 
 // TODO cache!
-func (c *Character) FinalStatValue(stat Stat, tag AttackTag, element Element) float64 {
+func (c *Character) FinalStatValue(stat Stat, tag AttackTag, element Element, extraBuffs []Buff) float64 {
 	baseValue := 0.0
 
 	switch stat {
@@ -56,6 +56,7 @@ func (c *Character) FinalStatValue(stat Stat, tag AttackTag, element Element) fl
 
 	value := baseValue
 	allBuffs := c.AllBuffs()
+	allBuffs = append(allBuffs, extraBuffs...)
 	for _, buff := range allBuffs {
 		if !buff.DamageTag.Is(tag) || !buff.Element.Is(element) {
 			continue

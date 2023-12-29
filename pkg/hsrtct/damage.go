@@ -96,11 +96,11 @@ func CalcBaseDamage(c Character, e Enemy, a Attack) (float64, error) {
 	baseDamage := 0.0
 	switch a.ScalingStat {
 	case Hp:
-		baseDamage = c.FinalStatValue(Hp, a.AttackTag, a.Element) * a.Multiplier / 100
+		baseDamage = c.FinalStatValue(Hp, a.AttackTag, a.Element, a.Buffs) * a.Multiplier / 100
 	case Atk:
-		baseDamage = c.FinalStatValue(Atk, a.AttackTag, a.Element) * a.Multiplier / 100
+		baseDamage = c.FinalStatValue(Atk, a.AttackTag, a.Element, a.Buffs) * a.Multiplier / 100
 	case Def:
-		baseDamage = c.FinalStatValue(Def, a.AttackTag, a.Element) * a.Multiplier / 100
+		baseDamage = c.FinalStatValue(Def, a.AttackTag, a.Element, a.Buffs) * a.Multiplier / 100
 	default:
 		return 0, ErrInvalidScalingStat
 	}
@@ -111,14 +111,14 @@ func CalcAvgCritMultiplier(c Character, e Enemy, a Attack) float64 {
 	if a.AttackTag == Dot {
 		return 1
 	}
-	critRate := c.FinalStatValue(CritRate, a.AttackTag, a.Element)
-	critDamage := c.FinalStatValue(CritDmg, a.AttackTag, a.Element)
+	critRate := c.FinalStatValue(CritRate, a.AttackTag, a.Element, a.Buffs)
+	critDamage := c.FinalStatValue(CritDmg, a.AttackTag, a.Element, a.Buffs)
 	critRate = math.Min(critRate, 100)
 	return 1 + (critRate / 100 * critDamage / 100)
 }
 
 func CalcDmgBonusMult(c Character, e Enemy, a Attack) float64 {
-	return 1 + c.FinalStatValue(DmgBonus, a.AttackTag, a.Element)/100
+	return 1 + c.FinalStatValue(DmgBonus, a.AttackTag, a.Element, a.Buffs)/100
 }
 
 func CalcResistanceMultiplier(c Character, e Enemy, a Attack) float64 {
@@ -137,6 +137,12 @@ func CalcResistanceMultiplier(c Character, e Enemy, a Attack) float64 {
 	}
 
 	for _, buff := range c.AllBuffs() {
+		if buff.Stat == ResPen && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
+			res -= buff.Value
+		}
+	}
+
+	for _, buff := range a.Buffs {
 		if buff.Stat == ResPen && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
 			res -= buff.Value
 		}
@@ -167,6 +173,12 @@ func CalcDefenseMultiplier(c Character, e Enemy, a Attack) float64 {
 	}
 
 	for _, buff := range c.AllBuffs() {
+		if buff.Stat == DefIgnore && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
+			defReduction += buff.Value
+		}
+	}
+
+	for _, buff := range a.Buffs {
 		if buff.Stat == DefIgnore && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
 			defReduction += buff.Value
 		}

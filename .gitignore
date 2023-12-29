@@ -8,6 +8,7 @@
 *.so
 *.dylib
 *.db
+*.db.lock
 
 # Test binary, built with `go test -c`
 *.test
