@@ -1,7 +1,7 @@
 package hsrtct
 
 type Character struct {
-	ID          string
+	ID          uint64
 	Name        string
 	Level       int
 	BaseHp      float64
@@ -12,7 +12,7 @@ type Character struct {
 	Element     Element
 	RelicBuild  RelicBuild
 	Buffs       []Buff
-	LightConeID string
+	LightConeID uint64
 	LightCone   LightCone `json:"-"`
 }
 
@@ -97,11 +97,11 @@ func (c *Character) FinalStatValue(stat Stat, tag AttackTag, element Element, ex
 }
 
 type LightCone struct {
-	ID      string
-	Name    string
-	Level   int
-	BaseHp  float64
-	BaseAtk float64
-	BaseDef float64
-	Buffs   []Buff
+	ID      uint64  `json:"id"`
+	Name    string  `json:"name"`
+	Level   int     `json:"level"`
+	BaseHp  float64 `json:"baseHp"`
+	BaseAtk float64 `json:"baseAtk"`
+	BaseDef float64 `json:"baseDef"`
+	Buffs   []Buff  `json:"buffs"`
 }

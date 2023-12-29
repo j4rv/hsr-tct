@@ -23,6 +23,10 @@ func (d AttackTag) Is(tag AttackTag) bool {
 	return d == tag || d == AnyAttack || tag == AnyAttack
 }
 
+func AttackTagKeys() []AttackTag {
+	return []AttackTag{Basic, Skill, Ultimate, FollowUp, Dot}
+}
+
 type AttackAOE string
 
 const (
@@ -36,7 +40,7 @@ const (
 // If AOE is Blast, will use Multiplier for the focused enemy and MultiplierSplash for its neighbors.
 // If AOE is All, will use Multiplier for all enemies.
 type Attack struct {
-	ID               string
+	ID               uint64
 	Name             string
 	ScalingStat      Stat
 	Multiplier       float64
@@ -48,7 +52,7 @@ type Attack struct {
 }
 
 type Scenario struct {
-	ID           string
+	ID           uint64
 	Name         string
 	Character    string
 	Enemies      []string

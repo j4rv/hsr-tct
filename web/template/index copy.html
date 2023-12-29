@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello World</title>
+    {{template "head" .}}
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-container>
+                <v-row>
+                    <v-col cols="12">
+                        <v-card>
+                            <v-card-title>
+                                <span class="headline">LightCone Form</span>
+                            </v-card-title>
+
+                            <v-card-text>
+                                <v-form @submit.prevent="submitForm">
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="formData.name" label="Name" required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model.number="formData.level" label="Level"
+                                                required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="4">
+                                            <v-text-field v-model.number="formData.baseHp" label="Base HP"
+                                                required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="4">
+                                            <v-text-field v-model.number="formData.baseAtk" label="Base ATK"
+                                                required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="4">
+                                            <v-text-field v-model.number="formData.baseDef" label="Base DEF"
+                                                required></v-text-field>
+                                        </v-col>
+                                    </v-row>
+
+                                    <v-row v-for="(buff, index) in formData.buffs" :key="index">
+                                        <v-col cols="12" md="3">
+                                            <v-text-field v-model="buff.stat" label="Stat" required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="2">
+                                            <v-text-field v-model.number="buff.value" label="Value"
+                                                required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-select v-model="buff.damageTag" :items="attackTags"
+                                                label="Damage Tag"></v-select>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-select v-model="buff.element" :items="elements"
+                                                label="Element"></v-select>
+                                        </v-col>
+                                        <v-col cols="12" md="1">
+                                            <v-btn @click="removeBuff(index)" color="error">Remove</v-btn>
+                                        </v-col>
+                                    </v-row>
+
+                                    <v-row>
+                                        <v-btn @click="addBuff" color="primary">Add Buff</v-btn>
+                                    </v-row>
+                                    <v-row>
+                                        <v-btn type="submit" color="primary">Submit</v-btn>
+                                    </v-row>
+                                </v-form>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
+            </v-container>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.9/dist/vuetify.js"></script>
+    <script>
+        lightcone = JSON.parse({{.lightcone }})
+        attackTags = {{.attackTags }}
+        elements = {{.elements }}
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: {
+                formData: lightcone,
+                attackTags: attackTags,
+                elements: elements,
+            },
+            methods: {
+                addBuff() {
+                    this.formData.buffs.push({
+                        stat: '',
+                        value: '',
+                        damageTag: '',
+                        element: '',
+                    });
+                },
+                removeBuff(index) {
+                    this.formData.buffs.splice(index, 1);
+                },
+                submitForm() {
+                    // Implement your form submission logic here
+                    fetch('/lightcones', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(this.formData),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Success:', data);
+                            // Implement any success handling logic here
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            // Implement any error handling logic here
+                        });
+                },
+            },
+        });
+    </script>
+</body>
+
+</html>
