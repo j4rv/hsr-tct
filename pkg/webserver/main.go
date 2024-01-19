@@ -3,29 +3,32 @@ package webserver
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/j4rv/hsr-tct/pkg/hsrtct"
 )
 
-func setupHandlers() *http.ServeMux {
-	mux := http.NewServeMux()
+func setupHandlers() *mux.Router {
+	mux := mux.NewRouter()
 
-	fs := http.FileServer(http.Dir("web/static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static/")))
+	mux.PathPrefix("/static/").Handler(s)
 
 	mux.HandleFunc("/", helloHandler)
-	mux.HandleFunc("/lightcones", lightConeHandler)
+	mux.HandleFunc("/lightcone", lightConeHandler)
+	mux.HandleFunc("/lightcone/edit/{id}", editLightConeHandler)
 	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		log.Println("TEST: " + string(body))
-		lightcone := auxLightCone{}
+		lightcone := hsrtct.LightCone{}
 		if err := json.Unmarshal(body, &lightcone); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -39,7 +42,7 @@ func setupHandlers() *http.ServeMux {
 }
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
-	jsonData, _ := json.Marshal(hsrtct.LightCone{
+	lc := hsrtct.LightCone{
 		Name:    "On the Fall of an Aeon",
 		Level:   80,
 		BaseHp:  1058,
@@ -49,12 +52,9 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 			{Stat: hsrtct.AtkPct, Value: 16 * 4},
 			{Stat: hsrtct.DmgBonus, Value: 24},
 		},
-	})
-	err := templates.ExecuteTemplate(w, "index.html", map[string]interface{}{
-		"lightcone":  string(jsonData),
-		"attackTags": hsrtct.AttackTagKeys(),
-		"elements":   hsrtct.ElementKeys(),
-	})
+	}
+	err := templates.ExecuteTemplate(w, "index.html", newTemplateData(lc))
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -91,12 +91,32 @@ func lightConeHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
+}
 
+func editLightConeHandler(w http.ResponseWriter, r *http.Request) {
+	var lc hsrtct.LightCone
+	var err error
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if id != "0" {
+		lc, err = db.GetLightCone(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	err = templates.ExecuteTemplate(w, "lightcone_edit.html", newTemplateData(lc))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func Start(port int, injectedDb database) error {
 	db = injectedDb
-	go loadTemplates()
+	loadTemplates()
+	go watchTemplateChanges()
 	mux := setupHandlers()
 	log.Printf("Server starting on :%d\n", port)
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)

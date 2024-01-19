@@ -6,32 +6,42 @@
     {{template "head" .}}
 </head>
 
-<body>
+<body class="bg-gray-100">
+    {{template "navbar" "lightcones"}}
     <section>
-        <div>
-            <h1>Light Cones List</h1>
+        <h1 class="text-2xl font-semibold m-4">Light Cones</h1>
+        <a href="lightcone/edit/0">
+            <button type="submit" class="w-full max-w-52 bg-blue-500 text-white m-2 px-3 py-2 rounded-md">+ Add new
+                Light
+                Cone </button>
+        </a>
+        <div class="flex">
 
             {{ range . }}
-            <div>
-                <article>
+            <div class="bg-white w-full max-w-80 m-2 p-4 rounded-lg shadow-md">
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <button type="submit"
+                            class="border border-blue-500 px-1 py-1 rounded-md flex items-center justify-center">
+                            <i class="material-icons text-blue-500">create</i>
+                        </button>
+                        <span class="text-lg font-semibold ml-2">{{ .Name }}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <p class="text-gray-600">HP: {{ .BaseHp }}</p>
+                        <p class="text-gray-600">ATK: {{ .BaseAtk }}</p>
+                        <p class="text-gray-600">DEF: {{ .BaseDef }}</p>
+                    </div>
                     <div>
-                        <div>
-                            <p>
-                                <strong>{{ .Name }}</strong><br>
-                                Level: {{ .Level }} <br>
-                                Base HP: {{ .BaseHp }} <br>
-                                Base ATK: {{ .BaseAtk }} <br>
-                                Base DEF: {{ .BaseDef }} <br>
-                            <div>
-                                {{ range .Buffs }}
-                                <span>{{ .String }}</span>
-                                {{ end }}
-                            </div>
-                            </p>
+                        <div class="space-y-2">
+                            {{ range .Buffs }}
+                            <div class="text-gray-800">{{ .String }}</div>
+                            {{ end }}
                         </div>
                     </div>
-                </article>
+                </div>
             </div>
+
             {{ end }}
 
         </div>

@@ -1,19 +1,18 @@
 package hsrtct
 
 type Character struct {
-	ID          uint64
-	Name        string
-	Level       int
-	BaseHp      float64
-	BaseAtk     float64
-	BaseDef     float64
-	BaseSpd     float64
-	BaseAggro   float64
-	Element     Element
-	RelicBuild  RelicBuild
-	Buffs       []Buff
-	LightConeID uint64
-	LightCone   LightCone `json:"-"`
+	ID         uint64
+	Name       string
+	Level      int
+	BaseHp     float64
+	BaseAtk    float64
+	BaseDef    float64
+	BaseSpd    float64
+	BaseAggro  float64
+	Element    Element
+	RelicBuild RelicBuild
+	Buffs      []Buff
+	LightCone  LightCone `json:"-"`
 }
 
 // Will probably be called many times, make it cached in the future
@@ -27,12 +26,11 @@ func (c *Character) AllBuffs() []Buff {
 
 // EquipLightCone assigns a LightCone to a Character, updating the LightConeID and the LightCone itself.
 func (c *Character) EquipLightCone(lc LightCone) {
-	c.LightConeID = lc.ID
 	c.LightCone = lc
 }
 
 // TODO cache!
-func (c *Character) FinalStatValue(stat Stat, tag AttackTag, element Element, extraBuffs []Buff) float64 {
+func (c *Character) FinalStatValue(stat Stat, tag DamageTag, element Element, extraBuffs []Buff) float64 {
 	baseValue := 0.0
 
 	switch stat {

@@ -2,6 +2,7 @@ package hsrtct
 
 type RelicBuild struct {
 	ID         uint64
+	Name       string
 	Relics     [6]Relic
 	SubStats   []RelicSubstat
 	SetEffects []Buff

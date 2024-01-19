@@ -46,7 +46,7 @@ func StatKeys() []Stat {
 type Buff struct {
 	Stat      Stat      `json:"stat"`
 	Value     float64   `json:"value"`
-	DamageTag AttackTag `json:"damageTag"`
+	DamageTag DamageTag `json:"damageTag"`
 	Element   Element   `json:"element"`
 }
 

@@ -72,10 +72,9 @@ func GetHookRelicBuild() hsrtct.RelicBuild {
 
 func GetBasicEnemy() hsrtct.Enemy {
 	return hsrtct.Enemy{
-		Name:    "Basic",
-		Level:   85,
-		Buffs:   []hsrtct.Buff{},
-		Debuffs: []hsrtct.Buff{},
+		Name:  "Basic",
+		Level: 85,
+		Buffs: []hsrtct.Buff{},
 	}
 }
 
@@ -103,7 +102,7 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 	hook.RelicBuild = GetHookRelicBuild()
 	leftEnemy := GetBasicEnemy()
 	centerEnemy := GetBasicEnemy()
-	centerEnemy.Debuffs = append(centerEnemy.Debuffs, hsrtct.Buff{Stat: hsrtct.DefShred, Value: 45 + 8})
+	centerEnemy.Buffs = append(centerEnemy.Buffs, hsrtct.Buff{Stat: hsrtct.DefShred, Value: 45 + 8})
 	rightEnemy := GetBasicEnemy()
 
 	skillCenter := hsrtct.Attack{

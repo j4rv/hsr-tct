@@ -8,23 +8,23 @@ import (
 
 var ErrInvalidScalingStat = errors.New("invalid scaling stat")
 
-type AttackTag string
+type DamageTag string
 
 const (
-	AnyAttack AttackTag = ""
-	Basic     AttackTag = "Basic"
-	Skill     AttackTag = "Skill"
-	Ultimate  AttackTag = "Ultimate"
-	FollowUp  AttackTag = "FollowUp"
-	Dot       AttackTag = "Dot"
+	AnyAttack DamageTag = ""
+	Basic     DamageTag = "Basic"
+	Skill     DamageTag = "Skill"
+	Ultimate  DamageTag = "Ultimate"
+	FollowUp  DamageTag = "FollowUp"
+	Dot       DamageTag = "Dot"
 )
 
-func (d AttackTag) Is(tag AttackTag) bool {
+func (d DamageTag) Is(tag DamageTag) bool {
 	return d == tag || d == AnyAttack || tag == AnyAttack
 }
 
-func AttackTagKeys() []AttackTag {
-	return []AttackTag{Basic, Skill, Ultimate, FollowUp, Dot}
+func AttackTagKeys() []DamageTag {
+	return []DamageTag{Basic, Skill, Ultimate, FollowUp, Dot}
 }
 
 type AttackAOE string
@@ -46,7 +46,7 @@ type Attack struct {
 	Multiplier       float64
 	MultiplierSplash float64
 	Element          Element
-	AttackTag        AttackTag
+	AttackTag        DamageTag
 	AttackAOE        AttackAOE
 	Buffs            []Buff
 }
@@ -57,7 +57,7 @@ type Scenario struct {
 	Notes          string
 	Character      string
 	Enemies        []string
-	FocusedEnemy   string
+	FocusedEnemy   int
 	Attacks        map[uint64]float64
 	AttacksSummary map[uint64]string
 }
@@ -134,11 +134,8 @@ func CalcResistanceMultiplier(c Character, e Enemy, a Attack) float64 {
 		if buff.Stat == ElementalRes && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
 			res += buff.Value
 		}
-	}
-
-	for _, debuff := range e.Debuffs {
-		if debuff.Stat == ResShred && debuff.Element.Is(a.Element) && debuff.DamageTag.Is(a.AttackTag) {
-			res -= debuff.Value
+		if buff.Stat == ResShred && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
+			res -= buff.Value
 		}
 	}
 
@@ -170,11 +167,8 @@ func CalcDefenseMultiplier(c Character, e Enemy, a Attack) float64 {
 		if buff.Stat == DefPct {
 			defPct += buff.Value
 		}
-	}
-
-	for _, debuff := range e.Debuffs {
-		if debuff.Stat == DefShred && debuff.Element.Is(a.Element) && debuff.DamageTag.Is(a.AttackTag) {
-			defReduction += debuff.Value
+		if buff.Stat == DefShred && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
+			defReduction += buff.Value
 		}
 	}
 
@@ -198,9 +192,9 @@ func CalcDefenseMultiplier(c Character, e Enemy, a Attack) float64 {
 
 func CalcVulnerabilityMultiplier(c Character, e Enemy, a Attack) float64 {
 	vuln := 0.0
-	for _, debuff := range e.Debuffs {
-		if debuff.Stat == Vulnerability && debuff.Element.Is(a.Element) && debuff.DamageTag.Is(a.AttackTag) {
-			vuln += debuff.Value
+	for _, buff := range e.Buffs {
+		if buff.Stat == Vulnerability && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.AttackTag) {
+			vuln += buff.Value
 		}
 	}
 	return 1.0 + vuln/100

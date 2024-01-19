@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello World</title>
+    {{template "head" .}}
+</head>
+
+<body class="bg-gray-100">
+    {{template "navbar" "lightcones"}}
+    <div id="app" class="mt-4 flex justify-center">
+        <div class="max-w-2xl w-full">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h1 class="text-2xl font-semibold m-4">LightCone</h1>
+
+                <form @submit.prevent="submitForm">
+
+                    <div class="grid grid-cols-12 gap-4">
+                        <input v-model="formData.id" type="hidden" />
+                        <div class="col-span-9">
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input v-model="formData.name" type="text" placeholder="Name"
+                                class="w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div class="col-span-3">
+                            <label for="level" class="block text-sm font-medium text-gray-700">Level</label>
+                            <input v-model.number="formData.level" type="text" placeholder="Level"
+                                class="w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div class="col-span-4">
+                            <label for="baseHp" class="block text-sm font-medium text-gray-700">Base HP</label>
+                            <input v-model.number="formData.baseHp" type="text" placeholder="Base HP"
+                                class="w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div class="col-span-4">
+                            <label for="baseAtk" class="block text-sm font-medium text-gray-700">Base ATK</label>
+                            <input v-model.number="formData.baseAtk" type="text" placeholder="Base ATK"
+                                class="w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div class="col-span-4">
+                            <label for="baseDef" class="block text-sm font-medium text-gray-700">Base DEF</label>
+                            <input v-model.number="formData.baseDef" type="text" placeholder="Base DEF"
+                                class="w-full px-3 py-2 border rounded-md">
+                        </div>
+                    </div>
+
+                    <h2 class="text-md font-semibold mt-4">Buffs</h2>
+                    <div v-for="(buff, index) in formData.buffs" :key="index" class="grid grid-cols-12 mt-4 gap-2">
+                        <div class="col-span-3">
+                            <input v-model="buff.stat" type="text" placeholder="Stat"
+                                class="w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div class="col-span-2">
+                            <input v-model.number="buff.value" type="number" placeholder="Value"
+                                class="w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div class="col-span-3">
+                            <select v-model="buff.damageTag" class="w-full px-3 py-2 border rounded-md">
+                                <option v-for="tag in attackTags" :key="tag" :value="tag">[[ tag ]]</option>
+                            </select>
+                        </div>
+                        <div class="col-span-3">
+                            <select v-model="buff.element" class="w-full px-3 py-2 border rounded-md">
+                                <option v-for="element in elements" :key="element" :value="element">[[ element ]]
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <button @click="removeBuff(index)" type="button"
+                                class="w-full bg-red-500 text-white px-2 py-2 rounded-md">X</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 mt-4 gap-4">
+                        <div class="col-span-6"></div>
+                        <div class="col-span-3">
+                            <button @click="addBuff" type="button"
+                                class="w-full border border-blue-500 text-blue-500 px-3 py-2 rounded-md">Add
+                                Buff</button>
+                        </div>
+                        <div class="col-span-3">
+                            <button type="submit"
+                                class="w-full bg-blue-500 text-white px-3 py-2 rounded-md">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const lightcone = JSON.parse('{{ .ContextJSON }}');
+        const stats = {{ .Stats }};
+        const attackTags = {{ .AttackTags }};
+        const elements = {{ .Elements }};
+        const { createApp } = Vue;
+
+        const app = createApp({
+            delimiters: ['[[', ']]'],
+            data() {
+                return {
+                    formData: lightcone,
+                    stats: stats,
+                    attackTags: attackTags,
+                    elements: elements,
+                };
+            },
+            methods: {
+                addBuff() {
+                    this.formData.buffs.push({
+                        stat: '',
+                        value: '',
+                        damageTag: '',
+                        element: '',
+                    });
+                },
+                removeBuff(index) {
+                    this.formData.buffs.splice(index, 1);
+                },
+                submitForm() {
+                    // Implement your form submission logic here
+                    fetch('/lightcones', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(this.formData),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Success:', data);
+                            // Implement any success handling logic here
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            // Implement any error handling logic here
+                        });
+                },
+            },
+        });
+
+        app.mount('#app');
+    </script>
+</body>
