@@ -90,7 +90,7 @@ func TestCalcAvgDamageUltimate(t *testing.T) {
 		AttackTag:   hsrtct.Ultimate,
 	}
 	damage, err := hsrtct.CalcAvgDamageST(hook, enemy, attack)
-	assertNotNil(t, err)
+	assertNilError(t, err)
 	if int(damage) != 41425 {
 		t.Fatalf("Expected damage to be 41425, got %v", damage)
 	}
@@ -106,10 +106,12 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 	rightEnemy := GetBasicEnemy()
 
 	skillCenter := hsrtct.Attack{
-		ScalingStat: hsrtct.Atk,
-		Multiplier:  308 + 110,
-		Element:     hsrtct.Fire,
-		AttackTag:   hsrtct.Skill,
+		ScalingStat:      hsrtct.Atk,
+		AttackAOE:        hsrtct.Blast,
+		Multiplier:       308 + 110,
+		MultiplierSplash: 88 + 110,
+		Element:          hsrtct.Fire,
+		AttackTag:        hsrtct.Skill,
 	}
 	skillSplash := hsrtct.Attack{
 		ScalingStat: hsrtct.Atk,
@@ -119,11 +121,11 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 	}
 
 	leftDmg, err := hsrtct.CalcAvgDamageST(hook, leftEnemy, skillSplash)
-	assertNotNil(t, err)
+	assertNilError(t, err)
 	rightDmg, err := hsrtct.CalcAvgDamageST(hook, rightEnemy, skillSplash)
-	assertNotNil(t, err)
+	assertNilError(t, err)
 	centerDmg, err := hsrtct.CalcAvgDamageST(hook, centerEnemy, skillCenter)
-	assertNotNil(t, err)
+	assertNilError(t, err)
 
 	damage := leftDmg + centerDmg + rightDmg
 	if int(damage) != 91656 {
@@ -131,8 +133,8 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 	}
 }
 
-func assertNotNil(t *testing.T, err error) {
+func assertNilError(t *testing.T, err error) {
 	if err != nil {
-		t.Fatalf("Expected non-nil error, got nil")
+		t.Fatalf("Expected nil error, got '%v'", err)
 	}
 }

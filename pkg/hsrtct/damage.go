@@ -55,9 +55,9 @@ type Scenario struct {
 	ID             uint64
 	Name           string
 	Notes          string
-	Character      string
-	Enemies        []string
-	FocusedEnemy   int
+	Character      Character
+	Enemies        []Enemy
+	FocusedEnemy   uint64
 	Attacks        map[uint64]float64
 	AttacksSummary map[uint64]string
 }
@@ -76,6 +76,10 @@ func CalcAvgDamageST(c Character, e Enemy, a Attack) (float64, error) {
 	defMult := CalcDefenseMultiplier(c, e, a)
 	vulnMult := CalcVulnerabilityMultiplier(c, e, a)
 	return baseDamage * critMult * dmgBonusMult * resMult * defMult * vulnMult, nil
+}
+
+func CalcAvgDmgScenario(s Scenario) (float64, error) {
+	return 0, nil
 }
 
 func ExplainDamageST(c Character, e Enemy, a Attack) (string, error) {
