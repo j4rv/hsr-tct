@@ -23,3 +23,5 @@
 go.work
 # Discarded files I dont want to delete from the project
 discarded/
+
+*.xlsx
