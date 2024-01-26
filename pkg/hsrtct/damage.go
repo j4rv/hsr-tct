@@ -52,21 +52,63 @@ type Attack struct {
 }
 
 type Scenario struct {
-	ID             uint64
-	Name           string
-	Notes          string
-	Character      Character
-	Enemies        []Enemy
-	FocusedEnemy   uint64
-	Attacks        map[uint64]float64
-	AttacksSummary map[uint64]string
+	ID           uint64
+	Name         string
+	Notes        string
+	Character    Character
+	Enemies      []Enemy
+	FocusedEnemy int
+	Attacks      []Attack
 }
 
-func CalcAvgDamageST(c Character, e Enemy, a Attack) (float64, error) {
-	if a.AttackAOE != Single {
-		return 0, errors.New("expected aoe: single")
+func CalcAvgDmgScenario(s Scenario) (float64, error) {
+	totalDmg := 0.0
+	for _, attack := range s.Attacks {
+		switch attack.AttackAOE {
+
+		case Single:
+			dmg, err := CalcAvgDamage(s.Character, s.Enemies[s.FocusedEnemy], attack, false)
+			if err != nil {
+				return 0, err
+			}
+			totalDmg += dmg
+
+		case Blast:
+			avgDmg, err := CalcAvgDamage(s.Character, s.Enemies[s.FocusedEnemy], attack, false)
+			if err != nil {
+				return 0, err
+			}
+			totalDmg += avgDmg
+			if s.FocusedEnemy-1 >= 0 {
+				splashDmg, err := CalcAvgDamage(s.Character, s.Enemies[s.FocusedEnemy-1], attack, true)
+				if err != nil {
+					return 0, err
+				}
+				totalDmg += splashDmg
+			}
+			if s.FocusedEnemy+1 < len(s.Enemies) {
+				splashDmg, err := CalcAvgDamage(s.Character, s.Enemies[s.FocusedEnemy+1], attack, true)
+				if err != nil {
+					return 0, err
+				}
+				totalDmg += splashDmg
+			}
+
+		case All:
+			for _, enemy := range s.Enemies {
+				dmg, err := CalcAvgDamage(s.Character, enemy, attack, false)
+				if err != nil {
+					return 0, err
+				}
+				totalDmg += dmg
+			}
+		}
 	}
-	baseDamage, err := CalcBaseDamage(c, e, a)
+	return totalDmg, nil
+}
+
+func CalcAvgDamage(c Character, e Enemy, a Attack, isSplash bool) (float64, error) {
+	baseDamage, err := CalcBaseDamage(c, e, a, isSplash)
 	if err != nil {
 		return 0, err
 	}
@@ -78,12 +120,8 @@ func CalcAvgDamageST(c Character, e Enemy, a Attack) (float64, error) {
 	return baseDamage * critMult * dmgBonusMult * resMult * defMult * vulnMult, nil
 }
 
-func CalcAvgDmgScenario(s Scenario) (float64, error) {
-	return 0, nil
-}
-
-func ExplainDamageST(c Character, e Enemy, a Attack) (string, error) {
-	baseDamage, err := CalcBaseDamage(c, e, a)
+func ExplainDamage(c Character, e Enemy, a Attack, isSplash bool) (string, error) {
+	baseDamage, err := CalcBaseDamage(c, e, a, isSplash)
 	if err != nil {
 		return "", err
 	}
@@ -102,15 +140,19 @@ func ExplainDamageST(c Character, e Enemy, a Attack) (string, error) {
 		baseDamage, critMult, dmgBonusMult, resMult, defMult, vulnMult), nil
 }
 
-func CalcBaseDamage(c Character, e Enemy, a Attack) (float64, error) {
+func CalcBaseDamage(c Character, e Enemy, a Attack, isSplash bool) (float64, error) {
 	baseDamage := 0.0
+	mult := a.Multiplier
+	if isSplash {
+		mult = a.MultiplierSplash
+	}
 	switch a.ScalingStat {
 	case Hp:
-		baseDamage = c.FinalStatValue(Hp, a.AttackTag, a.Element, a.Buffs) * a.Multiplier / 100
+		baseDamage = c.FinalStatValue(Hp, a.AttackTag, a.Element, a.Buffs) * mult / 100
 	case Atk:
-		baseDamage = c.FinalStatValue(Atk, a.AttackTag, a.Element, a.Buffs) * a.Multiplier / 100
+		baseDamage = c.FinalStatValue(Atk, a.AttackTag, a.Element, a.Buffs) * mult / 100
 	case Def:
-		baseDamage = c.FinalStatValue(Def, a.AttackTag, a.Element, a.Buffs) * a.Multiplier / 100
+		baseDamage = c.FinalStatValue(Def, a.AttackTag, a.Element, a.Buffs) * mult / 100
 	default:
 		return 0, ErrInvalidScalingStat
 	}

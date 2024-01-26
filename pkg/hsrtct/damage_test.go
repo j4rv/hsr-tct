@@ -89,7 +89,7 @@ func TestCalcAvgDamageUltimate(t *testing.T) {
 		Element:     hsrtct.Fire,
 		AttackTag:   hsrtct.Ultimate,
 	}
-	damage, err := hsrtct.CalcAvgDamageST(hook, enemy, attack)
+	damage, err := hsrtct.CalcAvgDamage(hook, enemy, attack, false)
 	assertNilError(t, err)
 	if int(damage) != 41425 {
 		t.Fatalf("Expected damage to be 41425, got %v", damage)
@@ -105,7 +105,7 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 	centerEnemy.Buffs = append(centerEnemy.Buffs, hsrtct.Buff{Stat: hsrtct.DefShred, Value: 45 + 8})
 	rightEnemy := GetBasicEnemy()
 
-	skillCenter := hsrtct.Attack{
+	skill := hsrtct.Attack{
 		ScalingStat:      hsrtct.Atk,
 		AttackAOE:        hsrtct.Blast,
 		Multiplier:       308 + 110,
@@ -113,18 +113,12 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 		Element:          hsrtct.Fire,
 		AttackTag:        hsrtct.Skill,
 	}
-	skillSplash := hsrtct.Attack{
-		ScalingStat: hsrtct.Atk,
-		Multiplier:  88 + 110,
-		Element:     hsrtct.Fire,
-		AttackTag:   hsrtct.Skill,
-	}
 
-	leftDmg, err := hsrtct.CalcAvgDamageST(hook, leftEnemy, skillSplash)
+	leftDmg, err := hsrtct.CalcAvgDamage(hook, leftEnemy, skill, true)
 	assertNilError(t, err)
-	rightDmg, err := hsrtct.CalcAvgDamageST(hook, rightEnemy, skillSplash)
+	centerDmg, err := hsrtct.CalcAvgDamage(hook, centerEnemy, skill, false)
 	assertNilError(t, err)
-	centerDmg, err := hsrtct.CalcAvgDamageST(hook, centerEnemy, skillCenter)
+	rightDmg, err := hsrtct.CalcAvgDamage(hook, rightEnemy, skill, true)
 	assertNilError(t, err)
 
 	damage := leftDmg + centerDmg + rightDmg

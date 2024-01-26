@@ -8,6 +8,8 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+const LIGHTCONES = "LightCones"
+
 var lightcones map[string]hsrtct.LightCone = map[string]hsrtct.LightCone{}
 
 func main() {
@@ -27,7 +29,7 @@ func main() {
 }
 
 func readLightCones(f *excelize.File) {
-	rows, err := f.GetRows("LightCones")
+	rows, err := f.GetRows(LIGHTCONES)
 	if err != nil {
 		panic("failed to read LightCones: " + err.Error())
 	}
@@ -42,7 +44,7 @@ func readLightCones(f *excelize.File) {
 		lc.BaseAtk = mustParseFloat(row[2])
 		lc.BaseDef = mustParseFloat(row[3])
 		for j := 0; j < 4; j++ {
-			b, err := readBuff(f, "LightCones", i, 5+j*4)
+			b, err := readBuff(f, LIGHTCONES, i, 5+j*4)
 			if err == nil {
 				lc.Buffs = append(lc.Buffs, b)
 			}
