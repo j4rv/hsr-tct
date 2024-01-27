@@ -80,16 +80,16 @@ func GetBasicEnemy() hsrtct.Enemy {
 
 func TestCalcAvgDamageUltimate(t *testing.T) {
 	hook := GetHookCharacter()
-	hook.LightCone = GetAeonLC()
-	hook.RelicBuild = GetHookRelicBuild()
+	lc := GetAeonLC()
+	rb := GetHookRelicBuild()
 	enemy := GetBasicEnemy()
 	attack := hsrtct.Attack{
 		ScalingStat: hsrtct.Atk,
 		Multiplier:  432 + 110,
 		Element:     hsrtct.Fire,
-		AttackTag:   hsrtct.Ultimate,
+		DamageTag:   hsrtct.Ultimate,
 	}
-	damage, err := hsrtct.CalcAvgDamage(hook, enemy, attack, false)
+	damage, err := hsrtct.CalcAvgDamage(hook, lc, rb, enemy, attack, false)
 	assertNilError(t, err)
 	if int(damage) != 41425 {
 		t.Fatalf("Expected damage to be 41425, got %v", damage)
@@ -98,8 +98,8 @@ func TestCalcAvgDamageUltimate(t *testing.T) {
 
 func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 	hook := GetHookCharacter()
-	hook.LightCone = GetAeonLC()
-	hook.RelicBuild = GetHookRelicBuild()
+	lc := GetAeonLC()
+	rb := GetHookRelicBuild()
 	leftEnemy := GetBasicEnemy()
 	centerEnemy := GetBasicEnemy()
 	centerEnemy.Buffs = append(centerEnemy.Buffs, hsrtct.Buff{Stat: hsrtct.DefShred, Value: 45 + 8})
@@ -111,14 +111,14 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 		Multiplier:       308 + 110,
 		MultiplierSplash: 88 + 110,
 		Element:          hsrtct.Fire,
-		AttackTag:        hsrtct.Skill,
+		DamageTag:        hsrtct.Skill,
 	}
 
-	leftDmg, err := hsrtct.CalcAvgDamage(hook, leftEnemy, skill, true)
+	leftDmg, err := hsrtct.CalcAvgDamage(hook, lc, rb, leftEnemy, skill, true)
 	assertNilError(t, err)
-	centerDmg, err := hsrtct.CalcAvgDamage(hook, centerEnemy, skill, false)
+	centerDmg, err := hsrtct.CalcAvgDamage(hook, lc, rb, centerEnemy, skill, false)
 	assertNilError(t, err)
-	rightDmg, err := hsrtct.CalcAvgDamage(hook, rightEnemy, skill, true)
+	rightDmg, err := hsrtct.CalcAvgDamage(hook, lc, rb, rightEnemy, skill, true)
 	assertNilError(t, err)
 
 	damage := leftDmg + centerDmg + rightDmg

@@ -1,45 +1,38 @@
 package hsrtct
 
 type Character struct {
-	ID         uint64
-	Name       string
-	Level      int
-	BaseHp     float64
-	BaseAtk    float64
-	BaseDef    float64
-	BaseSpd    float64
-	BaseAggro  float64
-	Element    Element
-	RelicBuild RelicBuild
-	Buffs      []Buff
-	LightCone  LightCone `json:"-"`
+	ID        uint64
+	Name      string
+	Level     int
+	BaseHp    float64
+	BaseAtk   float64
+	BaseDef   float64
+	BaseSpd   float64
+	BaseAggro float64
+	Element   Element
+	Buffs     []Buff
 }
 
 // Will probably be called many times, make it cached in the future
-func (c *Character) AllBuffs() []Buff {
-	allBuffs := make([]Buff, len(c.Buffs)+len(c.LightCone.Buffs)+len(c.RelicBuild.AsBuffs()))
+func (c *Character) AllBuffs(lc LightCone, rb RelicBuild) []Buff {
+	allBuffs := make([]Buff, len(c.Buffs)+len(lc.Buffs)+len(rb.AsBuffs()))
 	copy(allBuffs, c.Buffs)
-	copy(allBuffs[len(c.Buffs):], c.LightCone.Buffs)
-	copy(allBuffs[len(c.Buffs)+len(c.LightCone.Buffs):], c.RelicBuild.AsBuffs())
+	copy(allBuffs[len(c.Buffs):], lc.Buffs)
+	copy(allBuffs[len(c.Buffs)+len(lc.Buffs):], rb.AsBuffs())
 	return allBuffs
 }
 
-// EquipLightCone assigns a LightCone to a Character, updating the LightConeID and the LightCone itself.
-func (c *Character) EquipLightCone(lc LightCone) {
-	c.LightCone = lc
-}
-
 // TODO cache!
-func (c *Character) FinalStatValue(stat Stat, tag DamageTag, element Element, extraBuffs []Buff) float64 {
+func (c *Character) FinalStatValue(lc LightCone, rb RelicBuild, stat Stat, tag DamageTag, element Element, extraBuffs []Buff) float64 {
 	baseValue := 0.0
 
 	switch stat {
 	case Hp:
-		baseValue = c.BaseHp + c.LightCone.BaseHp
+		baseValue = c.BaseHp + lc.BaseHp
 	case Atk:
-		baseValue = c.BaseAtk + c.LightCone.BaseAtk
+		baseValue = c.BaseAtk + lc.BaseAtk
 	case Def:
-		baseValue = c.BaseDef + c.LightCone.BaseDef
+		baseValue = c.BaseDef + lc.BaseDef
 	case Spd:
 		baseValue = c.BaseSpd
 	case Aggro:
@@ -53,7 +46,7 @@ func (c *Character) FinalStatValue(stat Stat, tag DamageTag, element Element, ex
 	}
 
 	value := baseValue
-	allBuffs := c.AllBuffs()
+	allBuffs := c.AllBuffs(lc, rb)
 	allBuffs = append(allBuffs, extraBuffs...)
 	for _, buff := range allBuffs {
 		if !buff.DamageTag.Is(tag) || !buff.Element.Is(element) {
