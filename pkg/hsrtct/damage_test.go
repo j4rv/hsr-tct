@@ -1,6 +1,7 @@
 package hsrtct_test
 
 import (
+	"log"
 	"testing"
 
 	"github.com/j4rv/hsr-tct/pkg/hsrtct"
@@ -125,6 +126,13 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 	if int(damage) != 91656 {
 		t.Fatalf("Expected damage to be 91656, got %v", damage)
 	}
+}
+
+func TestExplainFinalStats(t *testing.T) {
+	hook := GetHookCharacter()
+	lc := GetAeonLC()
+	rb := GetHookRelicBuild()
+	log.Println(hsrtct.ExplainFinalStats(hook, lc, rb))
 }
 
 func assertNilError(t *testing.T, err error) {

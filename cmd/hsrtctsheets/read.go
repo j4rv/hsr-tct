@@ -56,7 +56,7 @@ func readCharacters(f *excelize.File) {
 			Element:   hsrtct.Element(row[7]),
 		}
 
-		for j := 0; j < 4; j++ {
+		for j := 0; j < 7; j++ {
 			buff, err := readBuff(f, CHARACTERS, i, 8+j*4)
 			if err == nil {
 				character.Buffs = append(character.Buffs, buff)
@@ -209,7 +209,7 @@ func readScenarios(f *excelize.File) {
 			scenario.Attacks[attack] = mult
 		}
 
-		scenarios[scenario.Name] = scenario
+		scenarios = append(scenarios, scenario)
 	}
 }
 

@@ -10,19 +10,21 @@ import (
 )
 
 const FILENAME = "HSRTCT-config.xlsx"
+const RESULT_FILENAME = "HSRTCT-results.xlsx"
 const LIGHTCONES = "LightCones"
 const CHARACTERS = "Characters"
 const RELICBUILDS = "RelicBuilds"
 const ENEMIES = "Enemies"
 const ATTACKS = "Attacks"
 const SCENARIOS = "Scenarios"
+const RESULTS = "HSRTCT Results"
 
 var lightcones map[string]hsrtct.LightCone = map[string]hsrtct.LightCone{}
 var characters map[string]hsrtct.Character = map[string]hsrtct.Character{}
 var relicbuilds map[string]hsrtct.RelicBuild = map[string]hsrtct.RelicBuild{}
 var enemies map[string]hsrtct.Enemy = map[string]hsrtct.Enemy{}
 var attacks map[string]hsrtct.Attack = map[string]hsrtct.Attack{}
-var scenarios map[string]hsrtct.Scenario = map[string]hsrtct.Scenario{}
+var scenarios []hsrtct.Scenario = []hsrtct.Scenario{}
 
 func main() {
 	f, err := excelize.OpenFile(FILENAME)
@@ -49,27 +51,78 @@ func main() {
 	log.Println("readScenarios...")
 	readScenarios(f)
 
-	log.Println(scenarios["Hook Prisoner Solo 2dots"].Attacks)
-	log.Println(scenarios["Hook Prisoner Solo 2dots"].Enemies)
-	log.Println(scenarios["Hook Prisoner Solo 2dots"].FocusedEnemy)
+	log.Println("calculating...")
+	calcAndWrite()
+}
 
-	for k, v := range scenarios {
-		dmg, err := hsrtct.CalcAvgDmgScenario(v)
-		if err != nil {
-			panic("failed to calculate damage for scenario: " + k + ", " + err.Error())
+func calcAndWrite() {
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
 		}
-		fmt.Println(k, dmg)
-		explanation, err := hsrtct.ExplainDmgScenario(v)
+	}()
+
+	index, err := f.NewSheet(RESULTS)
+	f.SetActiveSheet(index)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	centeredNumberStyle, err := f.NewStyle(&excelize.Style{
+		NumFmt: 2,
+		Alignment: &excelize.Alignment{
+			Horizontal: "center",
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	f.SetCellValue(RESULTS, "A1", "Scenario")
+	f.SetCellValue(RESULTS, "B1", "Damage")
+	f.SetColWidth(RESULTS, "A", "A", 60)
+	f.SetColWidth(RESULTS, "B", "B", 20)
+	f.SetColStyle(RESULTS, "B", centeredNumberStyle)
+
+	for rowIndex, scenario := range scenarios {
+		rowIndex++
+		f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 0), scenario.Name)
+
+		dmg, err := hsrtct.CalcAvgDmgScenario(scenario)
 		if err != nil {
-			panic("failed to explain damage for scenario: " + k + ", " + err.Error())
+			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), "failed to calculate damage for scenario: "+scenario.Name+", "+err.Error())
+		} else {
+			log.Println("scenario: " + scenario.Name + ", dmg: " + strconv.FormatFloat(dmg, 'f', 2, 64))
+			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), dmg)
 		}
-		fmt.Println(explanation)
+
+		explanation, err := hsrtct.ExplainDmgScenario(scenario)
+		if err != nil {
+			explanation = "failed to explain damage for scenario: " + scenario.Name + ", " + err.Error()
+		}
+		stats, err := hsrtct.ExplainFinalStats(scenario.Character, scenario.LightCone, scenario.RelicBuild)
+		if err != nil {
+			explanation = "failed to explain final stats for scenario: " + scenario.Name + ", " + err.Error()
+		}
+		f.AddComment(RESULTS, excelize.Comment{
+			Author: "HSRTCT",
+			Cell:   spreadsheetCoordinate(rowIndex, 1),
+			Text:   fmt.Sprintf("Stats:\n%s\n\n%s", stats, explanation),
+		})
+	}
+
+	if err := f.SaveAs(RESULT_FILENAME); err != nil {
+		fmt.Println("failed to save results: " + err.Error())
 	}
 }
 
 func spreadsheetCoordinate(row, col int) string {
 	columnLetters := ""
+	col++
 	for col > 0 {
+		col--
 		columnLetters = string(rune('A'+col%26)) + columnLetters
 		col /= 26
 	}

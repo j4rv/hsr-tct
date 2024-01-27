@@ -197,13 +197,32 @@ func ExplainDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, 
 	defMult := CalcDefenseMultiplier(c, lc, rb, e, a)
 	vulnMult := CalcVulnerabilityMultiplier(c, e, a)
 	return fmt.Sprintf(
-		"Base Damage: %.2f\n"+
-			"Crit Multiplier: %.2f\n"+
-			"Damage Bonus Multiplier: %.2f\n"+
-			"Resistance Multiplier: %.2f\n"+
-			"Defense Multiplier: %.2f\n"+
-			"Vulnerability Multiplier: %.2f",
+		" - Base Damage: %.2f\n"+
+			" - Crit Multiplier: %.2f\n"+
+			" - Damage Bonus Multiplier: %.2f\n"+
+			" - Resistance Multiplier: %.2f\n"+
+			" - Defense Multiplier: %.2f\n"+
+			" - Vulnerability Multiplier: %.2f",
 		baseDamage, critMult, dmgBonusMult, resMult, defMult, vulnMult), nil
+}
+
+func ExplainFinalStats(c Character, lc LightCone, rb RelicBuild) (string, error) {
+	hp := c.FinalStatValue(lc, rb, Hp, AnyAttack, AnyElement, nil)
+	atk := c.FinalStatValue(lc, rb, Atk, AnyAttack, AnyElement, nil)
+	def := c.FinalStatValue(lc, rb, Def, AnyAttack, AnyElement, nil)
+	critRate := c.FinalStatValue(lc, rb, CritRate, AnyAttack, AnyElement, nil)
+	critDmg := c.FinalStatValue(lc, rb, CritDmg, AnyAttack, AnyElement, nil)
+	dmgBonus := c.FinalStatValue(lc, rb, DmgBonus, AnyAttack, c.Element, nil)
+
+	return fmt.Sprintf(
+		" - HP: %.2f\n"+
+			" - Atk: %.2f\n"+
+			" - Def: %.2f\n"+
+			" - Crit Rate: %.2f\n"+
+			" - Crit DMG: %.2f\n"+
+			" - Final %s DMG%%: %.2f",
+		hp, atk, def, critRate, critDmg, c.Element, dmgBonus,
+	), nil
 }
 
 func CalcBaseDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, isSplash bool) (float64, error) {
