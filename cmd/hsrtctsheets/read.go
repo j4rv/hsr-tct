@@ -171,6 +171,29 @@ func readAttacks(f *excelize.File) {
 	}
 }
 
+func readExternalBuffs(f *excelize.File) {
+	rows, err := f.GetRows(EXTERNAL_BUFFS)
+	if err != nil {
+		panic("failed to read ExternalBuffs: " + err.Error())
+	}
+	for i, row := range rows {
+		if i == 0 || row[0] == "" {
+			continue
+		}
+
+		name := row[0]
+		buffs := make([]hsrtct.Buff, 0)
+		for j := 0; j < 7; j++ {
+			buff, err := readBuff(f, EXTERNAL_BUFFS, i, 1+j*4)
+			if err == nil {
+				buffs = append(buffs, buff)
+			}
+		}
+
+		externalBuffs[name] = buffs
+	}
+}
+
 func readScenarios(f *excelize.File) {
 	rows, err := f.GetRows(SCENARIOS)
 	if err != nil {
@@ -188,12 +211,12 @@ func readScenarios(f *excelize.File) {
 			LightCone:    lightcones[row[4]],
 			RelicBuild:   relicbuilds[row[5]],
 			Enemies:      make([]hsrtct.Enemy, 0),
-			FocusedEnemy: mustParseInt(row[11]) - 1, // Index in excel starts at 1
+			FocusedEnemy: mustParseInt(row[16]) - 1, // Index in excel starts at 1
 			Attacks:      make(map[*hsrtct.Attack]float64),
 		}
 
 		for j := 0; j < 5; j++ {
-			enemyName := row[6+j]
+			enemyName := row[11+j]
 			if enemyName == "" {
 				continue
 			}
@@ -201,8 +224,16 @@ func readScenarios(f *excelize.File) {
 			scenario.Enemies = append(scenario.Enemies, enemy)
 		}
 
+		for j := 0; j < 5; j++ {
+			externalBuff := row[6+j]
+			if externalBuff == "" {
+				continue
+			}
+			scenario.Character.Buffs = append(scenario.Character.Buffs, externalBuffs[externalBuff]...)
+		}
+
 		for j := 0; j < 8; j++ {
-			attack, mult := readAttack(f, SCENARIOS, i, 12+j*2)
+			attack, mult := readAttack(f, SCENARIOS, i, 17+j*2)
 			if attack == nil || mult == 0 {
 				continue
 			}

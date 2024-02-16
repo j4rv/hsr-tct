@@ -30,9 +30,10 @@ func DamageTagKeys() []DamageTag {
 type AttackAOE string
 
 const (
-	Single AttackAOE = ""
-	Blast  AttackAOE = "Blast"
-	All    AttackAOE = "All"
+	Single            AttackAOE = ""
+	Blast             AttackAOE = "Blast"
+	All               AttackAOE = "All"
+	EvenlyDistributed AttackAOE = "EvenlyDistributed"
 )
 
 func ParseAttackAOE(s string) (AttackAOE, error) {
@@ -44,6 +45,8 @@ func ParseAttackAOE(s string) (AttackAOE, error) {
 		return Blast, nil
 	case "All":
 		return All, nil
+	case "EvenlyDistributed":
+		return EvenlyDistributed, nil
 	}
 	return Single, fmt.Errorf("invalid attack AOE: %s", s)
 }
@@ -52,6 +55,7 @@ func ParseAttackAOE(s string) (AttackAOE, error) {
 // If AOE is Single: will use Multiplier and MultiplierSplash will be ignored.
 // If AOE is Blast, will use Multiplier for the focused enemy and MultiplierSplash for its neighbors.
 // If AOE is All, will use Multiplier for all enemies.
+// If AOE is EvenlyDistributed, will use a percentage of Multiplier on each enemy, evenly distributed.
 type Attack struct {
 	ID               uint64
 	Name             string
@@ -109,11 +113,14 @@ func CalcAvgDmgScenario(s Scenario) (float64, error) {
 				totalDmg += splashDmg * mult
 			}
 
-		case All:
+		case All, EvenlyDistributed:
 			for _, enemy := range s.Enemies {
 				dmg, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, enemy, *attack, false)
 				if err != nil {
 					return 0, err
+				}
+				if attack.AttackAOE == EvenlyDistributed {
+					dmg /= float64(len(s.Enemies))
 				}
 				totalDmg += dmg * mult
 			}
@@ -158,12 +165,13 @@ func ExplainDmgScenario(s Scenario) (string, error) {
 				explanation += fmt.Sprintf("%s\n", exp)
 			}
 
-		case All:
-			for _, enemy := range s.Enemies {
+		case All, EvenlyDistributed:
+			for i, enemy := range s.Enemies {
 				exp, err := ExplainDamage(s.Character, s.LightCone, s.RelicBuild, enemy, *attack, false)
 				if err != nil {
 					return "", err
 				}
+				explanation += fmt.Sprintf("Enemy %d:\n", i)
 				explanation += fmt.Sprintf("%s\n", exp)
 			}
 		}

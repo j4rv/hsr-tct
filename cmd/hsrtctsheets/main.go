@@ -9,6 +9,8 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+const VERSION = "1.1.0"
+
 const FILENAME = "HSRTCT-config.xlsx"
 const RESULT_FILENAME = "HSRTCT-results.xlsx"
 const LIGHTCONES = "LightCones"
@@ -17,6 +19,7 @@ const RELICBUILDS = "RelicBuilds"
 const ENEMIES = "Enemies"
 const ATTACKS = "Attacks"
 const SCENARIOS = "Scenarios"
+const EXTERNAL_BUFFS = "ExternalBuffs"
 const RESULTS = "HSRTCT Results"
 
 var lightcones map[string]hsrtct.LightCone = map[string]hsrtct.LightCone{}
@@ -24,6 +27,7 @@ var characters map[string]hsrtct.Character = map[string]hsrtct.Character{}
 var relicbuilds map[string]hsrtct.RelicBuild = map[string]hsrtct.RelicBuild{}
 var enemies map[string]hsrtct.Enemy = map[string]hsrtct.Enemy{}
 var attacks map[string]hsrtct.Attack = map[string]hsrtct.Attack{}
+var externalBuffs map[string][]hsrtct.Buff = map[string][]hsrtct.Buff{}
 var scenarios []hsrtct.Scenario = []hsrtct.Scenario{}
 
 func main() {
@@ -38,21 +42,28 @@ func main() {
 		}
 	}()
 
-	log.Println("readLightCones...")
+	log.Println("[INFO] Version: " + VERSION)
+
+	log.Println("[INFO] Reading LightCones...")
 	readLightCones(f)
-	log.Println("readCharacters...")
+	log.Println("[INFO] Reading Characters...")
 	readCharacters(f)
-	log.Println("readRelicBuilds...")
+	log.Println("[INFO] Reading RelicBuilds...")
 	readRelicBuilds(f)
-	log.Println("readEnemies...")
+	log.Println("[INFO] Reading Enemies...")
 	readEnemies(f)
-	log.Println("readAttacks...")
+	log.Println("[INFO] Reading Attacks...")
 	readAttacks(f)
-	log.Println("readScenarios...")
+	log.Println("[INFO] Reading External Buffs...")
+	readExternalBuffs(f)
+	log.Println("[INFO] Reading Scenarios...")
 	readScenarios(f)
 
-	log.Println("calculating...")
+	log.Println("[INFO] calculating...")
 	calcAndWrite()
+
+	fmt.Println("Done!\nPress the Enter key to exit.")
+	fmt.Scanln()
 }
 
 func calcAndWrite() {
@@ -64,6 +75,7 @@ func calcAndWrite() {
 	}()
 
 	index, err := f.NewSheet(RESULTS)
+	f.DeleteSheet("Sheet1")
 	f.SetActiveSheet(index)
 	if err != nil {
 		fmt.Println(err)
@@ -82,7 +94,7 @@ func calcAndWrite() {
 
 	f.SetCellValue(RESULTS, "A1", "Scenario")
 	f.SetCellValue(RESULTS, "B1", "Damage")
-	f.SetColWidth(RESULTS, "A", "A", 60)
+	f.SetColWidth(RESULTS, "A", "A", 80)
 	f.SetColWidth(RESULTS, "B", "B", 20)
 	f.SetColStyle(RESULTS, "B", centeredNumberStyle)
 
@@ -92,18 +104,21 @@ func calcAndWrite() {
 
 		dmg, err := hsrtct.CalcAvgDmgScenario(scenario)
 		if err != nil {
+			log.Println("[ERROR] failed to calculate damage for scenario: " + scenario.Name + ", " + err.Error())
 			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), "failed to calculate damage for scenario: "+scenario.Name+", "+err.Error())
 		} else {
-			log.Println("scenario: " + scenario.Name + ", dmg: " + strconv.FormatFloat(dmg, 'f', 2, 64))
+			log.Println("[INFO] " + scenario.Name + ": " + strconv.FormatFloat(dmg, 'f', 2, 64))
 			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), dmg)
 		}
 
 		explanation, err := hsrtct.ExplainDmgScenario(scenario)
 		if err != nil {
+			log.Println("[ERROR] failed to explain damage for scenario: " + scenario.Name + ", " + err.Error())
 			explanation = "failed to explain damage for scenario: " + scenario.Name + ", " + err.Error()
 		}
 		stats, err := hsrtct.ExplainFinalStats(scenario.Character, scenario.LightCone, scenario.RelicBuild)
 		if err != nil {
+			log.Println("[ERROR] failed to explain final stats for scenario: " + scenario.Name + ", " + err.Error())
 			explanation = "failed to explain final stats for scenario: " + scenario.Name + ", " + err.Error()
 		}
 		f.AddComment(RESULTS, excelize.Comment{
@@ -114,6 +129,7 @@ func calcAndWrite() {
 	}
 
 	if err := f.SaveAs(RESULT_FILENAME); err != nil {
+		log.Println("[ERROR] failed to save results: " + err.Error())
 		fmt.Println("failed to save results: " + err.Error())
 	}
 }
