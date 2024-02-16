@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/j4rv/hsr-tct/pkg/hsrtct"
 	"github.com/xuri/excelize/v2"
@@ -94,38 +95,34 @@ func calcAndWrite() {
 
 	f.SetCellValue(RESULTS, "A1", "Scenario")
 	f.SetCellValue(RESULTS, "B1", "Damage")
-	f.SetColWidth(RESULTS, "A", "A", 80)
+	f.SetCellValue(RESULTS, "C1", "Explanation page name")
+	f.SetColWidth(RESULTS, "A", "A", 150)
 	f.SetColWidth(RESULTS, "B", "B", 20)
+	f.SetColWidth(RESULTS, "C", "C", 20)
 	f.SetColStyle(RESULTS, "B", centeredNumberStyle)
 
 	for rowIndex, scenario := range scenarios {
 		rowIndex++
+		explanationSheetName := fmt.Sprintf("SCN %d", rowIndex)
 		f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 0), scenario.Name)
+		f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 2), explanationSheetName)
 
-		dmg, err := hsrtct.CalcAvgDmgScenario(scenario)
+		result, err := hsrtct.CalcAvgDmgScenario(scenario)
 		if err != nil {
 			log.Println("[ERROR] failed to calculate damage for scenario: " + scenario.Name + ", " + err.Error())
 			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), "failed to calculate damage for scenario: "+scenario.Name+", "+err.Error())
 		} else {
-			log.Println("[INFO] " + scenario.Name + ": " + strconv.FormatFloat(dmg, 'f', 2, 64))
-			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), dmg)
+			log.Println("[INFO] " + scenario.Name + ": " + strconv.FormatFloat(result.TotalDmg, 'f', 2, 64))
+			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), result.TotalDmg)
 		}
 
-		explanation, err := hsrtct.ExplainDmgScenario(scenario)
-		if err != nil {
-			log.Println("[ERROR] failed to explain damage for scenario: " + scenario.Name + ", " + err.Error())
-			explanation = "failed to explain damage for scenario: " + scenario.Name + ", " + err.Error()
+		for expIndex, exp := range result.Explanations {
+			f.NewSheet(explanationSheetName)
+			f.SetColWidth(explanationSheetName, "A", "Z", 40)
+			for i, expLine := range strings.Split(exp, "\n") {
+				f.SetCellValue(explanationSheetName, spreadsheetCoordinate(i, expIndex), expLine)
+			}
 		}
-		stats, err := hsrtct.ExplainFinalStats(scenario.Character, scenario.LightCone, scenario.RelicBuild)
-		if err != nil {
-			log.Println("[ERROR] failed to explain final stats for scenario: " + scenario.Name + ", " + err.Error())
-			explanation = "failed to explain final stats for scenario: " + scenario.Name + ", " + err.Error()
-		}
-		f.AddComment(RESULTS, excelize.Comment{
-			Author: "HSRTCT",
-			Cell:   spreadsheetCoordinate(rowIndex, 1),
-			Text:   fmt.Sprintf("Stats:\n%s\n\n%s", stats, explanation),
-		})
 	}
 
 	if err := f.SaveAs(RESULT_FILENAME); err != nil {

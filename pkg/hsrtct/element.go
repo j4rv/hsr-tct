@@ -17,6 +17,6 @@ func (e Element) Is(element Element) bool {
 	return e == element || e == AnyElement || element == AnyElement
 }
 
-func ElementKeys() []Element {
+func AllElements() []Element {
 	return []Element{Ice, Wind, Fire, Imaginary, Lightning, Quantum, Physical}
 }

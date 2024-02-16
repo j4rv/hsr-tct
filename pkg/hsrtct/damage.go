@@ -23,7 +23,7 @@ func (d DamageTag) Is(tag DamageTag) bool {
 	return d == tag || d == AnyAttack || tag == AnyAttack
 }
 
-func DamageTagKeys() []DamageTag {
+func AllDamageTags() []DamageTag {
 	return []DamageTag{Basic, Skill, Ultimate, FollowUp, Dot}
 }
 
@@ -80,157 +80,113 @@ type Scenario struct {
 	Attacks      map[*Attack]float64
 }
 
-func CalcAvgDmgScenario(s Scenario) (float64, error) {
+type ScenarioResult struct {
+	TotalDmg     float64
+	Explanations []string
+}
+
+func CalcAvgDmgScenario(s Scenario) (ScenarioResult, error) {
 	totalDmg := 0.0
+	explanations := []string{}
 	for attack, mult := range s.Attacks {
 		switch attack.AttackAOE {
 
 		case Single:
-			dmg, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy], *attack, false)
+			dmg, exp, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy], *attack, false)
 			if err != nil {
-				return 0, err
+				return ScenarioResult{}, err
 			}
 			totalDmg += dmg * mult
+			explanations = append(explanations, fmt.Sprintf("%s on %s:\nDamage: %f\n\n%s", attack.Name, s.Enemies[s.FocusedEnemy].Name, dmg, exp))
 
 		case Blast:
-			avgDmg, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy], *attack, false)
+			avgDmg, exp, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy], *attack, false)
 			if err != nil {
-				return 0, err
+				return ScenarioResult{}, err
 			}
 			totalDmg += avgDmg * mult
+			explanations = append(explanations, fmt.Sprintf("%s on %s (center):\nDamage: %f\n\n%s", attack.Name, s.Enemies[s.FocusedEnemy].Name, avgDmg, exp))
 			if s.FocusedEnemy-1 >= 0 {
-				splashDmg, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy-1], *attack, true)
+				splashDmg, exp, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy-1], *attack, true)
 				if err != nil {
-					return 0, err
+					return ScenarioResult{}, err
 				}
+				explanations = append(explanations, fmt.Sprintf("%s on %s (left):\nDamage: %f\n\n%s", attack.Name, s.Enemies[s.FocusedEnemy-1].Name, splashDmg, exp))
 				totalDmg += splashDmg * mult
 			}
 			if s.FocusedEnemy+1 < len(s.Enemies) {
-				splashDmg, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy+1], *attack, true)
+				splashDmg, exp, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy+1], *attack, true)
 				if err != nil {
-					return 0, err
+					return ScenarioResult{}, err
 				}
+				explanations = append(explanations, fmt.Sprintf("%s on %s (right):\nDamage: %f\n\n%s", attack.Name, s.Enemies[s.FocusedEnemy+1].Name, splashDmg, exp))
 				totalDmg += splashDmg * mult
 			}
 
 		case All, EvenlyDistributed:
 			for _, enemy := range s.Enemies {
-				dmg, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, enemy, *attack, false)
+				dmg, exp, err := CalcAvgDamage(s.Character, s.LightCone, s.RelicBuild, enemy, *attack, false)
 				if err != nil {
-					return 0, err
+					return ScenarioResult{}, err
 				}
 				if attack.AttackAOE == EvenlyDistributed {
 					dmg /= float64(len(s.Enemies))
 				}
+				explanations = append(explanations, fmt.Sprintf("%s on %s:\nDamage: %f\n\n%s", attack.Name, enemy.Name, dmg, exp))
 				totalDmg += dmg * mult
 			}
 		}
 	}
-	return totalDmg, nil
+	return ScenarioResult{totalDmg, explanations}, nil
 }
 
-func ExplainDmgScenario(s Scenario) (string, error) {
-	var explanation string
-	for attack, mult := range s.Attacks {
-		explanation += fmt.Sprintf("%s: %.2f\n", attack.Name, mult)
-		switch attack.AttackAOE {
+func CalcAvgDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, isSplash bool) (float64, string, error) {
+	baseDamage, err := CalcBaseDamage(c, lc, rb, e, a, isSplash)
+	if err != nil {
+		return 0, "", err
+	}
+	critMult := CalcAvgCritMultiplier(c, lc, rb, e, a)
+	dmgBonusMult := CalcDmgBonusMult(c, lc, rb, e, a)
+	resMult := CalcResistanceMultiplier(c, lc, rb, e, a)
+	defMult := CalcDefenseMultiplier(c, lc, rb, e, a)
+	vulnMult := CalcVulnerabilityMultiplier(c, e, a)
 
-		case Single:
-			exp, err := ExplainDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy], *attack, false)
-			if err != nil {
-				return "", err
-			}
-			explanation += fmt.Sprintf("%s\n", exp)
+	stats, err := FinalStats(c, lc, rb, e, a)
+	if err != nil {
+		return 0, "", err
+	}
 
-		case Blast:
-			exp, err := ExplainDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy], *attack, false)
-			if err != nil {
-				return "", err
-			}
-			explanation += fmt.Sprintf("%s\n", exp)
-			if s.FocusedEnemy-1 >= 0 {
-				exp, err = ExplainDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy-1], *attack, true)
-				if err != nil {
-					return "", err
-				}
-				explanation += "Splash (left):\n"
-				explanation += fmt.Sprintf("%s\n", exp)
-			}
-			if s.FocusedEnemy+1 < len(s.Enemies) {
-				exp, err = ExplainDamage(s.Character, s.LightCone, s.RelicBuild, s.Enemies[s.FocusedEnemy+1], *attack, true)
-				if err != nil {
-					return "", err
-				}
-				explanation += "Splash (right):\n"
-				explanation += fmt.Sprintf("%s\n", exp)
-			}
-
-		case All, EvenlyDistributed:
-			for i, enemy := range s.Enemies {
-				exp, err := ExplainDamage(s.Character, s.LightCone, s.RelicBuild, enemy, *attack, false)
-				if err != nil {
-					return "", err
-				}
-				explanation += fmt.Sprintf("Enemy %d:\n", i)
-				explanation += fmt.Sprintf("%s\n", exp)
-			}
+	explanation := fmt.Sprintf(
+		"Base Damage: %.2f\n"+
+			"Crit Multiplier: %.2f\n"+
+			"Damage Bonus Multiplier: %.2f\n"+
+			"Resistance Multiplier: %.2f\n"+
+			"Defense Multiplier: %.2f\n"+
+			"Vulnerability Multiplier: %.2f\n\n"+
+			"Stats:",
+		baseDamage, critMult, dmgBonusMult, resMult, defMult, vulnMult)
+	for _, stat := range AllStats() {
+		value, ok := stats[stat]
+		if !ok {
+			continue
 		}
-
-		explanation += "\n"
+		explanation += fmt.Sprintf("\n%s: %.2f", stat, value)
 	}
-	return explanation, nil
+
+	return baseDamage * critMult * dmgBonusMult * resMult * defMult * vulnMult, explanation, nil
 }
 
-func CalcAvgDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, isSplash bool) (float64, error) {
-	baseDamage, err := CalcBaseDamage(c, lc, rb, e, a, isSplash)
-	if err != nil {
-		return 0, err
+func FinalStats(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack) (map[Stat]float64, error) {
+	stats := make(map[Stat]float64)
+
+	for _, stat := range AllStats() {
+		value := c.FinalStatValue(lc, rb, stat, a.DamageTag, a.Element, nil)
+		if value != 0 {
+			stats[stat] = value
+		}
 	}
-	critMult := CalcAvgCritMultiplier(c, lc, rb, e, a)
-	dmgBonusMult := CalcDmgBonusMult(c, lc, rb, e, a)
-	resMult := CalcResistanceMultiplier(c, lc, rb, e, a)
-	defMult := CalcDefenseMultiplier(c, lc, rb, e, a)
-	vulnMult := CalcVulnerabilityMultiplier(c, e, a)
-	return baseDamage * critMult * dmgBonusMult * resMult * defMult * vulnMult, nil
-}
 
-func ExplainDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, isSplash bool) (string, error) {
-	baseDamage, err := CalcBaseDamage(c, lc, rb, e, a, isSplash)
-	if err != nil {
-		return "", err
-	}
-	critMult := CalcAvgCritMultiplier(c, lc, rb, e, a)
-	dmgBonusMult := CalcDmgBonusMult(c, lc, rb, e, a)
-	resMult := CalcResistanceMultiplier(c, lc, rb, e, a)
-	defMult := CalcDefenseMultiplier(c, lc, rb, e, a)
-	vulnMult := CalcVulnerabilityMultiplier(c, e, a)
-	return fmt.Sprintf(
-		" - Base Damage: %.2f\n"+
-			" - Crit Multiplier: %.2f\n"+
-			" - Damage Bonus Multiplier: %.2f\n"+
-			" - Resistance Multiplier: %.2f\n"+
-			" - Defense Multiplier: %.2f\n"+
-			" - Vulnerability Multiplier: %.2f",
-		baseDamage, critMult, dmgBonusMult, resMult, defMult, vulnMult), nil
-}
-
-func ExplainFinalStats(c Character, lc LightCone, rb RelicBuild) (string, error) {
-	hp := c.FinalStatValue(lc, rb, Hp, AnyAttack, AnyElement, nil)
-	atk := c.FinalStatValue(lc, rb, Atk, AnyAttack, AnyElement, nil)
-	def := c.FinalStatValue(lc, rb, Def, AnyAttack, AnyElement, nil)
-	critRate := c.FinalStatValue(lc, rb, CritRate, AnyAttack, AnyElement, nil)
-	critDmg := c.FinalStatValue(lc, rb, CritDmg, AnyAttack, AnyElement, nil)
-	dmgBonus := c.FinalStatValue(lc, rb, DmgBonus, AnyAttack, c.Element, nil)
-
-	return fmt.Sprintf(
-		" - HP: %.2f\n"+
-			" - Atk: %.2f\n"+
-			" - Def: %.2f\n"+
-			" - Crit Rate: %.2f\n"+
-			" - Crit DMG: %.2f\n"+
-			" - Final %s DMG%%: %.2f",
-		hp, atk, def, critRate, critDmg, c.Element, dmgBonus,
-	), nil
+	return stats, nil
 }
 
 func CalcBaseDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, isSplash bool) (float64, error) {

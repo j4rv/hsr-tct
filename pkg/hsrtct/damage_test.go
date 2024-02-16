@@ -90,10 +90,20 @@ func TestCalcAvgDamageUltimate(t *testing.T) {
 		Element:     hsrtct.Fire,
 		DamageTag:   hsrtct.Ultimate,
 	}
-	damage, err := hsrtct.CalcAvgDamage(hook, lc, rb, enemy, attack, false)
+
+	scn := hsrtct.Scenario{
+		Character:    hook,
+		LightCone:    lc,
+		RelicBuild:   rb,
+		Enemies:      []hsrtct.Enemy{enemy},
+		Attacks:      map[*hsrtct.Attack]float64{&attack: 1},
+		FocusedEnemy: 0,
+	}
+
+	scnResult, err := hsrtct.CalcAvgDmgScenario(scn)
 	assertNilError(t, err)
-	if int(damage) != 41425 {
-		t.Fatalf("Expected damage to be 41425, got %v", damage)
+	if int(scnResult.TotalDmg) != 41425 {
+		t.Fatalf("Expected damage to be 41425, got %v", scnResult.TotalDmg)
 	}
 }
 
@@ -115,14 +125,19 @@ func TestCalcAvgDamageMultipleEnemies(t *testing.T) {
 		DamageTag:        hsrtct.Skill,
 	}
 
-	leftDmg, err := hsrtct.CalcAvgDamage(hook, lc, rb, leftEnemy, skill, true)
-	assertNilError(t, err)
-	centerDmg, err := hsrtct.CalcAvgDamage(hook, lc, rb, centerEnemy, skill, false)
-	assertNilError(t, err)
-	rightDmg, err := hsrtct.CalcAvgDamage(hook, lc, rb, rightEnemy, skill, true)
+	scn := hsrtct.Scenario{
+		Character:    hook,
+		LightCone:    lc,
+		RelicBuild:   rb,
+		Enemies:      []hsrtct.Enemy{leftEnemy, centerEnemy, rightEnemy},
+		Attacks:      map[*hsrtct.Attack]float64{&skill: 1},
+		FocusedEnemy: 1,
+	}
+
+	scnResult, err := hsrtct.CalcAvgDmgScenario(scn)
 	assertNilError(t, err)
 
-	damage := leftDmg + centerDmg + rightDmg
+	damage := scnResult.TotalDmg
 	if int(damage) != 91656 {
 		t.Fatalf("Expected damage to be 91656, got %v", damage)
 	}
@@ -132,7 +147,7 @@ func TestExplainFinalStats(t *testing.T) {
 	hook := GetHookCharacter()
 	lc := GetAeonLC()
 	rb := GetHookRelicBuild()
-	log.Println(hsrtct.ExplainFinalStats(hook, lc, rb))
+	log.Println(hsrtct.FinalStats(hook, lc, rb, GetBasicEnemy(), hsrtct.Attack{}))
 }
 
 func assertNilError(t *testing.T, err error) {

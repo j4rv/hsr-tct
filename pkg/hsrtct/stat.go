@@ -33,7 +33,7 @@ const (
 	Vulnerability          Stat = "Vulnerability"
 )
 
-func StatKeys() []Stat {
+func AllStats() []Stat {
 	return []Stat{
 		Hp, Atk, Def, Spd,
 		HpPct, AtkPct, DefPct, SpdPct,
