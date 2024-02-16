@@ -31,6 +31,7 @@ const (
 	ResShred               Stat = "ResShred"
 	ResPen                 Stat = "ResPen"
 	Vulnerability          Stat = "Vulnerability"
+	DmgReduction           Stat = "DmgReduction"
 )
 
 func AllStats() []Stat {

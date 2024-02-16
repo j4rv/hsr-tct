@@ -10,7 +10,7 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-const VERSION = "1.1.0"
+const VERSION = "1.2.0"
 
 const FILENAME = "HSRTCT-config.xlsx"
 const RESULT_FILENAME = "HSRTCT-results.xlsx"

@@ -149,9 +149,10 @@ func CalcAvgDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, 
 	dmgBonusMult := CalcDmgBonusMult(c, lc, rb, e, a)
 	resMult := CalcResistanceMultiplier(c, lc, rb, e, a)
 	defMult := CalcDefenseMultiplier(c, lc, rb, e, a)
-	vulnMult := CalcVulnerabilityMultiplier(c, e, a)
+	vulnMult := CalcVulnerabilityMultiplier(e, a)
+	dmgReductionMult := CalcDmgReductionMultiplier(e, a)
 
-	stats, err := FinalStats(c, lc, rb, e, a)
+	stats, err := CharacterStats(c, lc, rb, e, a)
 	if err != nil {
 		return 0, "", err
 	}
@@ -162,9 +163,10 @@ func CalcAvgDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, 
 			"Damage Bonus Multiplier: %.2f\n"+
 			"Resistance Multiplier: %.2f\n"+
 			"Defense Multiplier: %.2f\n"+
-			"Vulnerability Multiplier: %.2f\n\n"+
+			"Vulnerability Multiplier: %.2f\n"+
+			"Damage Reduction Multiplier: %.2f\n\n"+
 			"Stats:",
-		baseDamage, critMult, dmgBonusMult, resMult, defMult, vulnMult)
+		baseDamage, critMult, dmgBonusMult, resMult, defMult, vulnMult, dmgReductionMult)
 	for _, stat := range AllStats() {
 		value, ok := stats[stat]
 		if !ok {
@@ -173,10 +175,10 @@ func CalcAvgDamage(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack, 
 		explanation += fmt.Sprintf("\n%s: %.2f", stat, value)
 	}
 
-	return baseDamage * critMult * dmgBonusMult * resMult * defMult * vulnMult, explanation, nil
+	return baseDamage * critMult * dmgBonusMult * resMult * defMult * vulnMult * dmgReductionMult, explanation, nil
 }
 
-func FinalStats(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack) (map[Stat]float64, error) {
+func CharacterStats(c Character, lc LightCone, rb RelicBuild, e Enemy, a Attack) (map[Stat]float64, error) {
 	stats := make(map[Stat]float64)
 
 	for _, stat := range AllStats() {
@@ -285,7 +287,7 @@ func CalcDefenseMultiplier(c Character, lc LightCone, rb RelicBuild, e Enemy, a 
 	return 1 - (totalDef / (totalDef + 200.0 + 10.0*float64(c.Level)))
 }
 
-func CalcVulnerabilityMultiplier(c Character, e Enemy, a Attack) float64 {
+func CalcVulnerabilityMultiplier(e Enemy, a Attack) float64 {
 	vuln := 0.0
 	for _, buff := range e.Buffs {
 		if buff.Stat == Vulnerability && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.DamageTag) {
@@ -293,4 +295,14 @@ func CalcVulnerabilityMultiplier(c Character, e Enemy, a Attack) float64 {
 		}
 	}
 	return 1.0 + vuln/100
+}
+
+func CalcDmgReductionMultiplier(e Enemy, a Attack) float64 {
+	dmgReduction := 0.0
+	for _, buff := range e.Buffs {
+		if buff.Stat == DmgReduction && buff.Element.Is(a.Element) && buff.DamageTag.Is(a.DamageTag) {
+			dmgReduction += buff.Value
+		}
+	}
+	return 1.0 - dmgReduction/100
 }

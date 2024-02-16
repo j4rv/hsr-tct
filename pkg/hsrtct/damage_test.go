@@ -147,7 +147,7 @@ func TestExplainFinalStats(t *testing.T) {
 	hook := GetHookCharacter()
 	lc := GetAeonLC()
 	rb := GetHookRelicBuild()
-	log.Println(hsrtct.FinalStats(hook, lc, rb, GetBasicEnemy(), hsrtct.Attack{}))
+	log.Println(hsrtct.CharacterStats(hook, lc, rb, GetBasicEnemy(), hsrtct.Attack{}))
 }
 
 func assertNilError(t *testing.T, err error) {

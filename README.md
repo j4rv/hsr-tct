@@ -9,3 +9,6 @@
    - With 1-5 **Enemies**
    - With **N Attacks** to Enemy with an **amount**
    - **Final damage**: The addition of all attacks damage times their amount
+ - [x] Better explanations
+ - [x] Add "Dmg reduction" stat
+ - [ ] Add stuff like "Crit dmg taken" on enemies
