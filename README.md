@@ -1,5 +1,9 @@
 # Honkai Star Rail Theorycrafting Tool
 
+TDLR: A flexible way of sheeting damage, comparing relic sets or supports.
+
+Has support for debuffed enemies (think Silverwolf, Topaz or Resolution Shines As Pearls of Sweat), buffs on specific attacks or team buffs.
+
 <picture>
   <img style="width: 128px;" alt="A picture of Hook" src="images/hook.png">
 </picture>
@@ -13,6 +17,14 @@ Scenarios example (cropped):
 
 Relic sets example (cropped):
 ![A cropped screenshot of the Relic Sets page from the input excel](/images/inputRelicSets1.png)
+
+Most stuff is coded as a buff (including enemy debuffs).
+
+A buff consists of:
+ - The stat it buffs (or debuffs)
+ - The number value of the buff
+ - The damage tag condition (if it has one)
+ - The element condition (if it has one)
 
 ## Output
 
@@ -35,4 +47,5 @@ Scenario explanation example (cropped):
    - **Final damage**: The addition of all attacks damage times their amount
  - [x] Better explanations
  - [x] Add "Dmg reduction" stat
- - [ ] Add stuff like "Crit dmg taken" on enemies
+ - [ ] Implement stuff like "Crit dmg taken" on enemies
+ - [ ] Implement a way to add break damage on scenarios

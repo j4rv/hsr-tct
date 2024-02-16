@@ -108,19 +108,21 @@ func calcAndWrite() {
 		f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 2), explanationSheetName)
 
 		result, err := hsrtct.CalcAvgDmgScenario(scenario)
+
 		if err != nil {
 			log.Println("[ERROR] failed to calculate damage for scenario: " + scenario.Name + ", " + err.Error())
-			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), "failed to calculate damage for scenario: "+scenario.Name+", "+err.Error())
+			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), "Failed to calculate damage for scenario: "+scenario.Name+", "+err.Error())
 		} else {
-			log.Println("[INFO] " + scenario.Name + ": " + strconv.FormatFloat(result.TotalDmg, 'f', 2, 64))
-			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), result.TotalDmg)
-		}
+			formattedDmg := strconv.FormatFloat(result.TotalDmg, 'f', 2, 64)
+			log.Println("[INFO] " + scenario.Name + ": " + formattedDmg)
+			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), formattedDmg)
 
-		for expIndex, exp := range result.Explanations {
-			f.NewSheet(explanationSheetName)
-			f.SetColWidth(explanationSheetName, "A", "Z", 40)
-			for i, expLine := range strings.Split(exp, "\n") {
-				f.SetCellValue(explanationSheetName, spreadsheetCoordinate(i, expIndex), expLine)
+			for expIndex, exp := range result.Explanations {
+				f.NewSheet(explanationSheetName)
+				f.SetColWidth(explanationSheetName, "A", "Z", 40)
+				for i, expLine := range strings.Split(exp, "\n") {
+					f.SetCellValue(explanationSheetName, spreadsheetCoordinate(i, expIndex), expLine)
+				}
 			}
 		}
 	}
