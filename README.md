@@ -8,7 +8,16 @@ Has support for debuffed enemies (think Silverwolf, Topaz or Resolution Shines A
   <img style="width: 128px;" alt="A picture of Hook" src="images/hook.png">
 </picture>
 
+## Executing it from the source
+
+ - Install Go 1.20+ (https://go.dev/doc/install)
+ - Execute the following command to run it without making an exe:
+   - `go run .\cmd\hsrtctsheets\` (from the root directory of the repository)
+   - `go run {FULL_PATH}\cmd\hsrtctsheets\` (from any directory)
+
 ## Input sheet
+
+The app looks for a file named "HSRTCT-config.xlsx", needs to be on the same folder.
 
 **[Example (my own input sheet)](https://docs.google.com/spreadsheets/d/1rn1X0IpP8FRU7MoBQ0SFO1BZ14MRRlgNSy-XW9rRM34)**
 
@@ -49,3 +58,4 @@ Scenario explanation example (cropped):
  - [x] Add "Dmg reduction" stat
  - [ ] Implement stuff like "Crit dmg taken" on enemies
  - [ ] Implement a way to add break damage on scenarios
+ - [ ] Implement a way to calc heals/shields
