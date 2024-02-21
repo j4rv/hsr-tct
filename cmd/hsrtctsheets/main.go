@@ -113,7 +113,7 @@ func calcAndWrite() {
 			log.Println("[ERROR] failed to calculate damage for scenario: " + scenario.Name + ", " + err.Error())
 			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), "Failed to calculate damage for scenario: "+scenario.Name+", "+err.Error())
 		} else {
-			formattedDmg := strconv.FormatFloat(result.TotalDmg, 'f', 2, 64)
+			formattedDmg := strconv.FormatFloat(result.TotalDmg, 'f', 0, 64)
 			log.Println("[INFO] " + scenario.Name + ": " + formattedDmg)
 			f.SetCellValue(RESULTS, spreadsheetCoordinate(rowIndex, 1), formattedDmg)
 
